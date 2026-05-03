@@ -32,7 +32,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Clone and enter the project
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/total-tensor-lab/PromptShield.git
 cd PromptShield
 ```
 
