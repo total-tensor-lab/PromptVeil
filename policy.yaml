@@ -31,3 +31,30 @@ rules:
   # API keys / tokens are blocked — exposure would be a security incident.
   - type: api_key
     action: block
+
+  # ── India-specific PII ─────────────────────────────────────────────────
+  # Uncomment and adjust to enable India PII detection.
+  # Requires adding IndiaDetector to your Shield:
+  #   shield = Shield(config_path="policy.yaml",
+  #                   detectors=[RegexDetector(), IndiaDetector()])
+
+  # - type: in_aadhaar
+  #   action: mask       # XXXX-XXXX-<last 4>
+
+  # - type: in_pan
+  #   action: block      # too sensitive to allow in prompts
+
+  # - type: in_phone
+  #   action: mask       # +91-***-***-<last 4>
+
+  # - type: in_passport
+  #   action: block
+
+  # - type: in_voter_id
+  #   action: mask
+
+  # - type: in_ifsc
+  #   action: mask       # SBIN0******
+
+  # - type: in_gstin
+  #   action: mask       # 27*************
