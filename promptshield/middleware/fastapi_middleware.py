@@ -87,7 +87,11 @@ class PromptShieldMiddleware(BaseHTTPMiddleware):
                     )
 
                 # Rebuild the request with the sanitised body.
+                # We must update both the cached body bytes (_body) and the
+                # underlying receive callable so that downstream handlers that
+                # call request.body() / request.json() see the modified content.
                 modified = json.dumps(body).encode("utf-8")
+                request._body = modified  # type: ignore[attr-defined]
 
                 async def _receive():
                     return {"type": "http.request", "body": modified, "more_body": False}
