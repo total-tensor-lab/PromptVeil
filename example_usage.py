@@ -11,6 +11,8 @@ import re
 
 from promptshield import Shield
 from promptshield.detector.base import BaseDetector, DetectedEntity
+from promptshield.detector.india_detector import IndiaDetector
+from promptshield.detector.regex_detector import RegexDetector
 from promptshield.exceptions import SensitiveDataError
 from promptshield.policy.models import Action, PolicyConfig, Rule
 
@@ -124,5 +126,101 @@ llm_response = "Sure! You can reach support at support@internal.corp anytime."
 safe = response_shield.scan_response(llm_response)
 print(f"  LLM : {llm_response}")
 print(f"  Safe: {safe}")
+
+print("\nDone.\n")
+
+
+# ── Example 7: India PII — mask Aadhaar and phone ─────────────────────────
+separator("7 · India PII — mask Aadhaar and phone numbers")
+
+india_mask_config = PolicyConfig(
+    rules=[
+        Rule(type="in_aadhaar", action=Action.MASK),
+        Rule(type="in_phone",   action=Action.MASK),
+    ],
+    default_action=Action.ALLOW,
+)
+india_shield = Shield(config=india_mask_config, detectors=[IndiaDetector()])
+
+india_prompts = [
+    "My Aadhaar is 2345 6789 0124 and I live in Pune.",
+    "Reach me on +91 98765 43210 or at home 09876543210.",
+    "Aadhaar: 2345-6789-0124, mobile +91-98765-43210.",
+]
+for prompt in india_prompts:
+    result = india_shield.scan(prompt)
+    print(f"  IN : {prompt}")
+    print(f"  OUT: {result}\n")
+
+
+# ── Example 8: India PII — block PAN card ─────────────────────────────────
+separator("8 · India PII — block PAN card numbers")
+
+pan_config = PolicyConfig(
+    rules=[Rule(type="in_pan", action=Action.BLOCK)],
+    default_action=Action.ALLOW,
+)
+pan_shield = Shield(config=pan_config, detectors=[IndiaDetector()])
+
+try:
+    pan_shield.scan("Please process refund for PAN ABCPE1234F.")
+except SensitiveDataError as exc:
+    print(f"  Blocked! ({exc.entity_type}): {exc}")
+
+
+# ── Example 9: India PII — mask passport, voter ID, IFSC, GSTIN ───────────
+separator("9 · India PII — mask passport, voter ID, IFSC, GSTIN")
+
+doc_config = PolicyConfig(
+    rules=[
+        Rule(type="in_passport", action=Action.MASK),
+        Rule(type="in_voter_id", action=Action.MASK),
+        Rule(type="in_ifsc",     action=Action.MASK),
+        Rule(type="in_gstin",    action=Action.MASK),
+    ],
+    default_action=Action.ALLOW,
+)
+doc_shield = Shield(config=doc_config, detectors=[IndiaDetector()])
+
+doc_prompts = [
+    "Passport no. A1234567 was issued in Delhi.",
+    "Voter ID: ABC1234567 belongs to Ravi Kumar.",
+    "Please transfer to IFSC SBIN0001234.",
+    "Invoice raised under GSTIN 27ABCPE1234F1Z5.",
+]
+for prompt in doc_prompts:
+    result = doc_shield.scan(prompt)
+    print(f"  IN : {prompt}")
+    print(f"  OUT: {result}\n")
+
+
+# ── Example 10: Combined global + India detectors ─────────────────────────
+separator("10 · Combined RegexDetector + IndiaDetector")
+
+combined_config = PolicyConfig(
+    rules=[
+        Rule(type="email",      action=Action.MASK),
+        Rule(type="in_aadhaar", action=Action.MASK),
+        Rule(type="in_pan",     action=Action.BLOCK),
+    ],
+    default_action=Action.ALLOW,
+)
+combined_shield = Shield(
+    config=combined_config,
+    detectors=[RegexDetector(), IndiaDetector()],
+)
+
+mixed_prompts = [
+    "Contact: ravi@example.in, Aadhaar 2345 6789 0124.",
+    "Email me at ops@corp.com — no other PII here.",
+]
+for prompt in mixed_prompts:
+    try:
+        result = combined_shield.scan(prompt)
+        print(f"  IN : {prompt}")
+        print(f"  OUT: {result}\n")
+    except SensitiveDataError as exc:
+        print(f"  IN : {prompt}")
+        print(f"  BLOCKED ({exc.entity_type}): {exc}\n")
 
 print("\nDone.\n")
