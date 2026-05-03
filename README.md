@@ -230,9 +230,3 @@ uv run pytest -v
 
 62 tests, 0.06 s.
 
----
-
-## License
-
-MIT
-
