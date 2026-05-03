@@ -1,0 +1,33 @@
+# PromptShield Policy Configuration
+# -----------------------------------
+# version     : config schema version (informational)
+# default_action : fallback when no rule matches — mask | block | allow
+# rules       : ordered list of entity-type → action mappings
+#
+# Supported built-in entity types (RegexDetector):
+#   email        e.g.  alice@example.com
+#   phone        e.g.  555-867-5309 / +44 7911 123456
+#   credit_card  e.g.  4111-1111-1111-1111
+#   api_key      e.g.  sk-..., ghp_..., AKIA..., Bearer JWT
+#
+# Custom detectors can introduce additional type labels.
+
+version: "1.0"
+default_action: allow
+
+rules:
+  # Email addresses are masked — domain remains visible for context.
+  - type: email
+    action: mask
+
+  # Phone numbers are masked — last 4 digits visible.
+  - type: phone
+    action: mask
+
+  # Credit card numbers are blocked entirely — too risky to allow in prompts.
+  - type: credit_card
+    action: block
+
+  # API keys / tokens are blocked — exposure would be a security incident.
+  - type: api_key
+    action: block

@@ -1,0 +1,117 @@
+"""Masking logic for sensitive entity values."""
+
+import re
+from typing import Callable, Dict, List
+
+from ..detector.base import DetectedEntity
+
+
+# ---------------------------------------------------------------------------
+# Per-type masking helpers
+# ---------------------------------------------------------------------------
+
+def _mask_email(value: str) -> str:
+    """Mask the local-part of an email, preserving the domain.
+
+    Example: ``john.doe@example.com`` → ``j***@example.com``
+    """
+    parts = value.split("@", 1)
+    if len(parts) != 2:
+        return "***@***.***"
+    local, domain = parts
+    masked_local = (local[0] + "***") if len(local) > 1 else "***"
+    return f"{masked_local}@{domain}"
+
+
+def _mask_phone(value: str) -> str:
+    """Mask a phone number, keeping only the last four digits.
+
+    Example: ``555-867-5309`` → ``***-***-5309``
+    """
+    digits = re.sub(r"\D", "", value)
+    last_four = digits[-4:] if len(digits) >= 4 else "****"
+    return f"***-***-{last_four}"
+
+
+def _mask_credit_card(value: str) -> str:
+    """Mask a credit card number, keeping only the last four digits.
+
+    Example: ``4111-1111-1111-1111`` → ``****-****-****-1111``
+    """
+    digits = re.sub(r"\D", "", value)
+    last_four = digits[-4:] if len(digits) >= 4 else "****"
+    return f"****-****-****-{last_four}"
+
+
+def _mask_api_key(value: str) -> str:
+    """Mask an API key / token, keeping first 4 and last 4 characters.
+
+    Example: ``sk-abcdefgh1234567890`` → ``sk-a...7890``
+    """
+    clean = value.strip()
+    if len(clean) <= 8:
+        return "***"
+    return f"{clean[:4]}...{clean[-4:]}"
+
+
+def _mask_generic(value: str) -> str:
+    """Generic masking: first 2 + last 2 characters, rest replaced with ``***``.
+
+    Example: ``MySecret`` → ``My***et``
+    """
+    if len(value) <= 4:
+        return "***"
+    return f"{value[:2]}***{value[-2:]}"
+
+
+# ---------------------------------------------------------------------------
+# Dispatch table
+# ---------------------------------------------------------------------------
+
+_MASKERS: Dict[str, Callable[[str], str]] = {
+    "email": _mask_email,
+    "phone": _mask_phone,
+    "credit_card": _mask_credit_card,
+    "api_key": _mask_api_key,
+}
+
+
+def mask_value(value: str, entity_type: str) -> str:
+    """
+    Apply the appropriate mask for the given entity type.
+
+    Falls back to :func:`_mask_generic` for unknown entity types, making the
+    masking layer safe to use with custom detectors.
+
+    Args:
+        value: The original sensitive string.
+        entity_type: The entity category label (e.g. ``"email"``).
+
+    Returns:
+        A masked version of *value*.
+    """
+    masker = _MASKERS.get(entity_type, _mask_generic)
+    return masker(value)
+
+
+def apply_masks(text: str, entities: List[DetectedEntity]) -> str:
+    """
+    Replace each entity's value in *text* with its masked equivalent.
+
+    Entities are processed in reverse order (right → left) so that earlier
+    character positions remain valid after each substitution.
+
+    Args:
+        text: The original input text.
+        entities: Entities whose values should be masked.
+
+    Returns:
+        A new string with all entity values replaced by masked versions.
+    """
+    # Process right-to-left to keep earlier indices stable.
+    sorted_entities = sorted(entities, key=lambda e: e.start, reverse=True)
+    result = text
+    for entity in sorted_entities:
+        masked = mask_value(entity.value, entity.entity_type)
+        result = result[: entity.start] + masked + result[entity.end :]
+    return result
