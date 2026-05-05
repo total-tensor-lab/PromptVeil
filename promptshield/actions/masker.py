@@ -65,6 +65,80 @@ def _mask_generic(value: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# India-specific masking helpers
+# ---------------------------------------------------------------------------
+
+def _mask_in_aadhaar(value: str) -> str:
+    """Mask Aadhaar, keeping only the last 4 digits.
+
+    Example: ``2345 6789 0123`` → ``XXXX-XXXX-0123``
+    """
+    digits = re.sub(r"[\s\-]", "", value)
+    last_four = digits[-4:] if len(digits) >= 4 else "****"
+    return f"XXXX-XXXX-{last_four}"
+
+
+def _mask_in_pan(value: str) -> str:
+    """Mask PAN card, showing first 2 and last 1 characters.
+
+    Example: ``ABCDE1234F`` → ``AB*******F``
+    """
+    if len(value) < 3:
+        return "***"
+    return f"{value[:2]}{'*' * (len(value) - 3)}{value[-1]}"
+
+
+def _mask_in_phone(value: str) -> str:
+    """Mask Indian phone number, keeping only last 4 digits.
+
+    Example: ``+91 98765 43210`` → ``+91-***-***-3210``
+    """
+    digits = re.sub(r"\D", "", value)
+    last_four = digits[-4:] if len(digits) >= 4 else "****"
+    return f"+91-***-***-{last_four}"
+
+
+def _mask_in_passport(value: str) -> str:
+    """Mask Indian passport number, keeping only the first letter.
+
+    Example: ``A1234567`` → ``A*******``
+    """
+    if not value:
+        return "***"
+    return f"{value[0]}{'*' * (len(value) - 1)}"
+
+
+def _mask_in_voter_id(value: str) -> str:
+    """Mask Voter ID (EPIC), keeping the 3-letter state prefix.
+
+    Example: ``ABC1234567`` → ``ABC*******``
+    """
+    if len(value) <= 3:
+        return "***"
+    return f"{value[:3]}{'*' * (len(value) - 3)}"
+
+
+def _mask_in_ifsc(value: str) -> str:
+    """Mask IFSC code, keeping only the 4-letter bank code and the mandatory zero.
+
+    Example: ``SBIN0001234`` → ``SBIN0******``
+    """
+    if len(value) <= 5:
+        return "***"
+    return f"{value[:5]}{'*' * (len(value) - 5)}"
+
+
+def _mask_in_gstin(value: str) -> str:
+    """Mask GSTIN, keeping only the 2-digit state code.
+
+    Example: ``27ABCDE1234F1Z5`` → ``27*************``
+    """
+    if len(value) <= 2:
+        return "***"
+    return f"{value[:2]}{'*' * (len(value) - 2)}"
+
+
+# ---------------------------------------------------------------------------
 # Dispatch table
 # ---------------------------------------------------------------------------
 
@@ -73,6 +147,14 @@ _MASKERS: Dict[str, Callable[[str], str]] = {
     "phone": _mask_phone,
     "credit_card": _mask_credit_card,
     "api_key": _mask_api_key,
+    # India-specific
+    "in_aadhaar": _mask_in_aadhaar,
+    "in_pan": _mask_in_pan,
+    "in_phone": _mask_in_phone,
+    "in_passport": _mask_in_passport,
+    "in_voter_id": _mask_in_voter_id,
+    "in_ifsc": _mask_in_ifsc,
+    "in_gstin": _mask_in_gstin,
 }
 
 
