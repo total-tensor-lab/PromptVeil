@@ -1,0 +1,140 @@
+<mxfile host="Electron" modified="2026-05-05T00:00:00.000Z" agent="GitHub Copilot" version="21.0.0" type="device">
+  <diagram name="Component Relationships" id="component-relationships">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="PromptShield — Component Relationships" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#1F3864;" vertex="1" parent="1">
+          <mxGeometry x="150" y="20" width="869" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Shield (centre) -->
+        <mxCell id="shield" value="&lt;b&gt;Shield&lt;/b&gt;&lt;br/&gt;+ scan(prompt: str) → str&lt;br/&gt;+ scan_response(response: str) → str&lt;br/&gt;+ add_detector(detector)&lt;br/&gt;&lt;i&gt;shield.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=3;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="430" y="300" width="230" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ── Detection Group ── -->
+        <mxCell id="det-group" value="Detection" style="swimlane;startSize=25;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;arcSize=4;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="120" width="350" height="310" as="geometry" />
+        </mxCell>
+
+        <!-- BaseDetector -->
+        <mxCell id="base-det" value="&lt;b&gt;&lt;&lt;abstract&gt;&gt;&lt;/b&gt;&lt;br/&gt;&lt;b&gt;BaseDetector&lt;/b&gt;&lt;br/&gt;+ detect(text: str) → List[DetectedEntity]&lt;br/&gt;+ supported_types: List[str]&lt;br/&gt;&lt;i&gt;detector/base.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;arcSize=12;fontSize=10;" vertex="1" parent="det-group">
+          <mxGeometry x="50" y="40" width="250" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- RegexDetector -->
+        <mxCell id="regex-det" value="&lt;b&gt;RegexDetector&lt;/b&gt;&lt;br/&gt;email · phone&lt;br/&gt;credit_card · api_key&lt;br/&gt;&lt;i&gt;detector/regex_detector.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="det-group">
+          <mxGeometry x="20" y="165" width="145" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- IndiaDetector -->
+        <mxCell id="india-det" value="&lt;b&gt;IndiaDetector&lt;/b&gt;&lt;br/&gt;in_aadhaar · in_pan&lt;br/&gt;in_gstin · in_passport&lt;br/&gt;in_ifsc · in_voter_id&lt;br/&gt;&lt;i&gt;detector/india_detector.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="det-group">
+          <mxGeometry x="185" y="165" width="145" height="90" as="geometry" />
+        </mxCell>
+
+        <!-- DetectedEntity -->
+        <mxCell id="entity" value="&lt;b&gt;DetectedEntity&lt;/b&gt; (dataclass)&lt;br/&gt;entity_type: str&lt;br/&gt;value: str&lt;br/&gt;start: int, end: int&lt;br/&gt;&lt;i&gt;detector/base.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="det-group">
+          <mxGeometry x="80" y="275" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ── Policy Group ── -->
+        <mxCell id="policy-group" value="Policy" style="swimlane;startSize=25;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;arcSize=4;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="730" y="120" width="380" height="310" as="geometry" />
+        </mxCell>
+
+        <!-- PolicyEngine -->
+        <mxCell id="policy-engine" value="&lt;b&gt;PolicyEngine&lt;/b&gt;&lt;br/&gt;+ get_action(entity) → Action&lt;br/&gt;+ evaluate(entities) → Dict[Entity, Action]&lt;br/&gt;&lt;i&gt;policy/engine.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;arcSize=12;fontSize=10;" vertex="1" parent="policy-group">
+          <mxGeometry x="65" y="40" width="250" height="75" as="geometry" />
+        </mxCell>
+
+        <!-- PolicyConfig -->
+        <mxCell id="policy-cfg" value="&lt;b&gt;PolicyConfig&lt;/b&gt; (dataclass)&lt;br/&gt;rules: List[Rule]&lt;br/&gt;default_action: Action&lt;br/&gt;version: str&lt;br/&gt;&lt;i&gt;policy/models.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="policy-group">
+          <mxGeometry x="20" y="160" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Rule -->
+        <mxCell id="rule" value="&lt;b&gt;Rule&lt;/b&gt; (dataclass)&lt;br/&gt;type: str&lt;br/&gt;action: Action&lt;br/&gt;&lt;i&gt;policy/models.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="policy-group">
+          <mxGeometry x="210" y="160" width="140" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Action -->
+        <mxCell id="action-enum" value="&lt;b&gt;&lt;&lt;enum&gt;&gt; Action&lt;/b&gt;&lt;br/&gt;MASK · BLOCK · ALLOW&lt;br/&gt;&lt;i&gt;policy/models.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="policy-group">
+          <mxGeometry x="100" y="270" width="170" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- load_config -->
+        <mxCell id="load-cfg" value="&lt;b&gt;load_config()&lt;/b&gt;&lt;br/&gt;YAML → PolicyConfig&lt;br/&gt;&lt;i&gt;config/loader.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="policy-group">
+          <mxGeometry x="210" y="255" width="140" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ── Actions Group ── -->
+        <mxCell id="actions-group" value="Actions" style="swimlane;startSize=25;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;arcSize=4;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="30" y="510" width="350" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- apply_masks -->
+        <mxCell id="apply-masks" value="&lt;b&gt;apply_masks()&lt;/b&gt;&lt;br/&gt;Replaces spans in prompt&lt;br/&gt;&lt;i&gt;actions/masker.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="actions-group">
+          <mxGeometry x="20" y="40" width="145" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- mask_value -->
+        <mxCell id="mask-val" value="&lt;b&gt;mask_value()&lt;/b&gt;&lt;br/&gt;Type-aware redaction&lt;br/&gt;email/phone/card/api_key/India PII&lt;br/&gt;&lt;i&gt;actions/masker.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="actions-group">
+          <mxGeometry x="185" y="40" width="145" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- block() -->
+        <mxCell id="block-fn" value="&lt;b&gt;block()&lt;/b&gt;&lt;br/&gt;Raises SensitiveDataError&lt;br/&gt;&lt;i&gt;actions/blocker.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="actions-group">
+          <mxGeometry x="20" y="130" width="145" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- SensitiveDataError -->
+        <mxCell id="exc" value="&lt;b&gt;SensitiveDataError&lt;/b&gt;&lt;br/&gt;entity_type: str&lt;br/&gt;&lt;i&gt;exceptions.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="actions-group">
+          <mxGeometry x="185" y="130" width="145" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ── Infrastructure Group ── -->
+        <mxCell id="infra-group" value="Infrastructure" style="swimlane;startSize=25;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;arcSize=4;fontStyle=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="730" y="510" width="380" height="200" as="geometry" />
+        </mxCell>
+
+        <!-- AuditLogger -->
+        <mxCell id="audit-logger" value="&lt;b&gt;AuditLogger&lt;/b&gt;&lt;br/&gt;+ log_scan_result()&lt;br/&gt;+ log_blocked()&lt;br/&gt;Writes JSON → stdout&lt;br/&gt;&lt;i&gt;logger/audit_logger.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=1.5;arcSize=12;fontSize=10;" vertex="1" parent="infra-group">
+          <mxGeometry x="20" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- PromptShieldMiddleware -->
+        <mxCell id="middleware" value="&lt;b&gt;PromptShieldMiddleware&lt;/b&gt;&lt;br/&gt;BaseHTTPMiddleware&lt;br/&gt;+ dispatch(request, call_next)&lt;br/&gt;&lt;i&gt;middleware/fastapi_middleware.py&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=1.5;arcSize=12;fontSize=10;dashed=1;" vertex="1" parent="infra-group">
+          <mxGeometry x="200" y="40" width="160" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Inheritance arrows (dashed hollow) -->
+        <mxCell id="inh1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;dashed=1;endArrow=open;endFill=0;" edge="1" source="regex-det" target="base-det" parent="det-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="inh2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=1.5;dashed=1;endArrow=open;endFill=0;" edge="1" source="india-det" target="base-det" parent="det-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- PolicyConfig contains Rules -->
+        <mxCell id="comp1" value="contains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="policy-cfg" target="rule" parent="policy-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- Rule uses Action -->
+        <mxCell id="comp2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="rule" target="action-enum" parent="policy-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- load_config → PolicyConfig -->
+        <mxCell id="comp3" value="creates" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;dashed=1;" edge="1" source="load-cfg" target="policy-cfg" parent="policy-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- PolicyEngine uses PolicyConfig -->
+        <mxCell id="comp4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=1.5;" edge="1" source="policy-engine" target="policy-cfg" parent="policy-group"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+        <!-- Shield → Detectors (in outer diagram) -->
+        <mxCell id="r1" value="uses" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="shield" target="det-group" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- Shield → PolicyEngine -->
+        <mxCell id="r2" value="evaluates via" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" source="shield" target="policy-group" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- Shield → Actions -->
+        <mxCell id="r3" value="executes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="shield" target="actions-group" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- Shield → Logger -->
+        <mxCell id="r4" value="audits via" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#9673a6;strokeWidth=2;" edge="1" source="shield" target="infra-group" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <!-- Middleware → Shield -->
+        <mxCell id="r5" value="delegates to" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=1.5;dashed=1;" edge="1" source="middleware" target="shield" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
