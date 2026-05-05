@@ -1,0 +1,99 @@
+<mxfile host="Electron" modified="2026-05-05T00:00:00.000Z" agent="GitHub Copilot" version="21.0.0" type="device">
+  <diagram name="Processing Pipeline" id="processing-pipeline">
+    <mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="1">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- Title -->
+        <mxCell id="title" value="PromptShield — Processing Pipeline" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;fontColor=#1F3864;" vertex="1" parent="1">
+          <mxGeometry x="100" y="20" width="627" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Step 1: Input -->
+        <mxCell id="step1" value="&lt;b&gt;1. Input&lt;/b&gt;&lt;br/&gt;prompt: str&lt;br/&gt;&lt;i&gt;Shield.scan(prompt)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="80" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Type validation -->
+        <mxCell id="type-check" value="&lt;b&gt;Type Check&lt;/b&gt;&lt;br/&gt;&lt;i&gt;isinstance(prompt, str)?&lt;/i&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="289" y="185" width="250" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- TypeError -->
+        <mxCell id="type-err" value="&lt;b&gt;TypeError&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="590" y="200" width="120" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Step 2: Detect -->
+        <mxCell id="step2" value="&lt;b&gt;2. Detect Entities&lt;/b&gt;&lt;br/&gt;Run each detector in order&lt;br/&gt;&lt;i&gt;BaseDetector.detect(text)&lt;/i&gt;&lt;br/&gt;→ List[DetectedEntity]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="300" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Overlap resolution -->
+        <mxCell id="overlap" value="&lt;b&gt;Overlap Resolution&lt;/b&gt;&lt;br/&gt;Keep longest non-overlapping span&lt;br/&gt;&lt;i&gt;_resolve_overlaps()&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=1.5;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="264" y="410" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- No entities check -->
+        <mxCell id="no-entities" value="&lt;b&gt;Entities Found?&lt;/b&gt;" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="289" y="500" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Return unchanged -->
+        <mxCell id="pass-through" value="&lt;b&gt;Return prompt unchanged&lt;/b&gt;&lt;br/&gt;(no PII detected)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="590" y="517" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Step 3: Evaluate -->
+        <mxCell id="step3" value="&lt;b&gt;3. Policy Evaluation&lt;/b&gt;&lt;br/&gt;Map each entity to action&lt;br/&gt;&lt;i&gt;PolicyEngine.evaluate(entities)&lt;/i&gt;&lt;br/&gt;→ Dict[DetectedEntity, Action]" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="600" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Step 4: Block check -->
+        <mxCell id="block-check" value="&lt;b&gt;Any BLOCK actions?&lt;/b&gt;&lt;br/&gt;(fail-fast, first wins)" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontSize=11;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="289" y="715" width="250" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Block path -->
+        <mxCell id="block-log" value="&lt;b&gt;log_blocked()&lt;/b&gt;&lt;br/&gt;Audit log (no raw value)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=1.5;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="590" y="715" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="block-raise" value="&lt;b&gt;SensitiveDataError&lt;/b&gt;&lt;br/&gt;raised to caller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;arcSize=12;shadow=1;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="590" y="785" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Step 5: Mask -->
+        <mxCell id="step5" value="&lt;b&gt;4. Apply Masking&lt;/b&gt;&lt;br/&gt;Replace sensitive spans in-text&lt;br/&gt;&lt;i&gt;apply_masks(prompt, to_mask)&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="830" width="300" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- Step 6: Audit log -->
+        <mxCell id="step6" value="&lt;b&gt;5. Audit Log&lt;/b&gt;&lt;br/&gt;JSON line per scan event&lt;br/&gt;&lt;i&gt;AuditLogger.log_scan_result()&lt;/i&gt;&lt;br/&gt;Raw values never stored" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="930" width="300" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Output -->
+        <mxCell id="output" value="&lt;b&gt;6. Return Sanitised Prompt&lt;/b&gt;&lt;br/&gt;Safe to forward to LLM API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;arcSize=12;shadow=1;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="264" y="1040" width="300" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- Connector arrows -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="step1" target="type-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a2" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="type-check" target="type-err" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a3" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="type-check" target="step2" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="step2" target="overlap" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="overlap" target="no-entities" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a6" value="None" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="no-entities" target="pass-through" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a7" value="Found" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" source="no-entities" target="step3" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#d6b656;strokeWidth=2;" edge="1" source="step3" target="block-check" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a9" value="Yes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="block-check" target="block-log" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#b85450;strokeWidth=2;" edge="1" source="block-log" target="block-raise" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a11" value="No" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="block-check" target="step5" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#82b366;strokeWidth=2;" edge="1" source="step5" target="step6" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="a13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#6c8ebf;strokeWidth=2;" edge="1" source="step6" target="output" parent="1"><mxGeometry relative="1" as="geometry" /></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
