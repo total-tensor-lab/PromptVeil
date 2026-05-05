@@ -105,6 +105,34 @@ class TestApiKeyDetection:
         entities = detector.detect("Hello world, nothing secret here.")
         assert not any(e.entity_type == "api_key" for e in entities)
 
+    def test_stripe_live_key(self, detector):
+        entities = detector.detect("key=sk_live_abcdefABCDEF12345678901234")
+        keys = [e for e in entities if e.entity_type == "api_key"]
+        assert len(keys) == 1
+        assert keys[0].value == "sk_live_abcdefABCDEF12345678901234"
+
+    def test_stripe_test_key(self, detector):
+        entities = detector.detect("STRIPE_KEY=sk_test_abcdefABCDEF12345678901234")
+        keys = [e for e in entities if e.entity_type == "api_key"]
+        assert len(keys) == 1
+        assert keys[0].value == "sk_test_abcdefABCDEF12345678901234"
+
+    def test_anthropic_key(self, detector):
+        entities = detector.detect(
+            "ANTHROPIC_API_KEY=sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWxYz1234567890AbCd"
+        )
+        keys = [e for e in entities if e.entity_type == "api_key"]
+        assert len(keys) == 1
+        assert keys[0].value.startswith("sk-ant-")
+
+    def test_bearer_token(self, detector):
+        entities = detector.detect(
+            "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+        )
+        keys = [e for e in entities if e.entity_type == "api_key"]
+        assert len(keys) >= 1
+        assert any("Bearer" in k.value for k in keys)
+
 
 # ── Overlap resolution ────────────────────────────────────────────────────
 

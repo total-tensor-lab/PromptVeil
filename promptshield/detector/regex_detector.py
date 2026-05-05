@@ -39,6 +39,14 @@ _RAW_PATTERNS: Dict[str, List[str]] = {
         r"\bAIza[0-9A-Za-z\-_]{35}\b",                      # Google API key
         # JWT (three base64url segments separated by dots)
         r"\beyJ[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]*",
+        # Stripe keys
+        r"\bsk_(?:live|test)_[a-zA-Z0-9]{24,}\b",           # Stripe secret key
+        r"\bpk_(?:live|test)_[a-zA-Z0-9]{24,}\b",           # Stripe publishable key
+        r"\brk_(?:live|test)_[a-zA-Z0-9]{24,}\b",           # Stripe restricted key
+        # Anthropic / Claude
+        r"\bsk-ant-[a-zA-Z0-9\-_]{20,}\b",                  # Anthropic API key
+        # Generic Bearer token (RFC 6750)
+        r"\bBearer\s+[a-zA-Z0-9\-._~+/=]{20,}",             # Authorization: Bearer <token>
     ],
 }
 
