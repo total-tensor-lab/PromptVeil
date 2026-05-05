@@ -119,7 +119,7 @@ def _mask_in_voter_id(value: str) -> str:
 
 
 def _mask_in_ifsc(value: str) -> str:
-    """Mask IFSC code, keeping only the 4-letter bank code.
+    """Mask IFSC code, keeping only the 4-letter bank code and the mandatory zero.
 
     Example: ``SBIN0001234`` → ``SBIN0******``
     """
