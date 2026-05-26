@@ -10,12 +10,17 @@ Quickstart::
 """
 
 from .exceptions import ConfigurationError, PromptShieldError, SensitiveDataError
+from .results import EntityResult, ScanResult
 from .shield import Shield
+from .vault import PseudonymVault
 
 __all__ = [
     "Shield",
+    "ScanResult",
+    "EntityResult",
+    "PseudonymVault",
     "SensitiveDataError",
     "ConfigurationError",
     "PromptShieldError",
 ]
-__version__ = "0.1.0"
+__version__ = "0.2.0"

@@ -51,10 +51,20 @@ This creates a `.venv/` directory in the project root.
 uv pip install -e ".[dev]"
 ```
 
-To also install the optional FastAPI middleware support:
+To also install optional extras:
 
 ```bash
+# FastAPI middleware
 uv pip install -e ".[dev,fastapi]"
+
+# OpenAI adapter
+uv pip install -e ".[dev,openai]"
+
+# LangChain adapter
+uv pip install -e ".[dev,langchain]"
+
+# Everything at once
+uv pip install -e ".[dev,fastapi,openai,langchain]"
 ```
 
 > **Tip:** The `-e` flag installs in *editable* mode — any change you make to
@@ -88,12 +98,12 @@ uv run pytest -v
 Expected output:
 
 ```
-collected 62 items
+collected 206 items
 
-tests/test_config.py::TestLoadConfig::test_valid_config PASSED          [ 1%]
-tests/test_detector.py::TestEmailDetection::test_simple_email PASSED    [ 14%]
+tests/test_config.py::TestLoadConfig::test_valid_config PASSED          [ 0%]
+tests/test_detector.py::TestEmailDetection::test_simple_email PASSED    [ 1%]
 ...
-============================== 62 passed in 0.06s ==============================
+============================== 206 passed in 0.62s ==============================
 ```
 
 ### Run a specific test file
@@ -124,9 +134,16 @@ uv run pytest --cov=promptshield --cov-report=term-missing
 |---|---|
 | `tests/test_config.py` | YAML loader — valid configs, missing files, bad actions |
 | `tests/test_detector.py` | Regex patterns — email, phone, credit card, API key, overlap resolution |
+| `tests/test_india_detector.py` | India PII — Aadhaar Verhoeff checksum, PAN, GSTIN, IFSC, Passport, Voter ID |
 | `tests/test_masker.py` | Per-type masking functions and multi-entity substitution |
 | `tests/test_policy.py` | Policy engine rule matching, default action, evaluation |
 | `tests/test_shield.py` | End-to-end `Shield.scan()` — allow, mask, block, YAML config, `scan_response` |
+| `tests/test_middleware.py` | FastAPI middleware — mask path, block path, non-JSON passthrough |
+| `tests/test_confidence.py` | `DetectedEntity.confidence`, `Rule.min_confidence`, threshold enforcement |
+| `tests/test_results.py` | `ScanResult`, `EntityResult`, risk scoring, `scan_detailed()` |
+| `tests/test_profiles.py` | Profile registry, YAML `profile:` key, end-to-end scans per jurisdiction |
+| `tests/test_vault.py` | `PseudonymVault` token lifecycle, restore, `scan_with_vault()` round-trip |
+| `tests/test_adapters.py` | OpenAI and LangChain adapter integration and error paths |
 
 ---
 
@@ -188,13 +205,76 @@ from promptshield.policy.models import Action, PolicyConfig, Rule
 
 config = PolicyConfig(
     rules=[
-        Rule(type="email", action=Action.MASK),
+        Rule(type="email", action=Action.MASK, min_confidence=0.8),
         Rule(type="api_key", action=Action.BLOCK),
     ],
     default_action=Action.ALLOW,
 )
 shield = Shield(config=config)
 ```
+
+`min_confidence` is optional (default `0.0`). When a detector’s confidence for an entity is below the rule threshold, the rule is skipped and `default_action` applies.
+
+### Rich scan results with risk scoring
+
+```python
+result = shield.scan_detailed("Contact alice@example.com or call 555-867-5309")
+print(result.risk_score)    # e.g. 0.52
+print(result.risk_level)    # "MEDIUM"
+print(result.safe_text)     # sanitised prompt
+print(result.was_mutated)   # True
+
+for entity in result.entities:
+    print(entity.entity_type, entity.action, entity.masked_value)
+```
+
+`risk_level` thresholds: `NONE` = 0.0, `LOW` < 0.30, `MEDIUM` < 0.60, `HIGH` < 0.85, `CRITICAL` ≥ 0.85.
+
+### Activate a compliance profile
+
+```yaml
+# policy.yaml — activate with a single key
+profile: india_dpdpa   # or eu_gdpr / us_hipaa
+```
+
+```python
+shield = Shield(config_path="policy.yaml")  # profile detectors loaded automatically
+```
+
+Or programmatically:
+
+```python
+from promptshield.profiles import load_profile
+
+profile = load_profile("us_hipaa")
+shield = Shield(config=profile.policy, detectors=profile.detectors)
+```
+
+Available profiles:
+
+| Profile | Detectors bundled | Notable rules |
+|---|---|---|
+| `india_dpdpa` | `RegexDetector` + `IndiaDetector` | Aadhaar/PAN/Passport → BLOCK |
+| `eu_gdpr` | `RegexDetector` | email/phone → MASK; card/key → BLOCK |
+| `us_hipaa` | `RegexDetector` + `USDetector` | SSN → BLOCK; passport/EIN → MASK |
+
+### Pseudonymization vault (reversible)
+
+```python
+from promptshield import PseudonymVault
+
+vault = PseudonymVault()
+pseudo, vault = shield.scan_with_vault(
+    "Email alice@example.com or call 555-867-5309",
+    vault=vault,
+)
+# pseudo → "Email <EMAIL_1> or call <PHONE_1>"
+
+llm_response = call_llm(pseudo)        # LLM sees tokens, not real PII
+final = vault.restore(llm_response)    # swap tokens back in the reply
+```
+
+Pass the same `vault` instance across multiple turns to keep tokens stable throughout a conversation.
 
 ### Add a custom detector
 
@@ -241,6 +321,50 @@ uv pip install ".[fastapi]" uvicorn
 uv run uvicorn my_app:app --reload
 ```
 
+### OpenAI adapter
+
+Install the extra, then wrap your client once:
+
+```bash
+uv pip install ".[openai]"
+```
+
+```python
+import openai
+from promptshield.adapters import wrap_openai
+
+client = openai.OpenAI()
+wrap_openai(client, shield=shield)   # patches client in-place
+
+# All subsequent calls are scanned automatically:
+response = client.chat.completions.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": user_prompt}],
+)
+```
+
+Optionally pass a `PseudonymVault` to `wrap_openai` for reversible pseudonymization instead of permanent masking.
+
+### LangChain adapter
+
+```bash
+uv pip install ".[langchain]"
+```
+
+```python
+from promptshield.adapters import get_langchain_callback
+
+CallbackClass = get_langchain_callback()
+callback = CallbackClass(shield)
+
+# Pass as a callback to any LangChain chain or LLM:
+llm.invoke(prompt, config={"callbacks": [callback]})
+```
+
+The callback implements both `on_llm_start` (string prompts) and
+`on_chat_model_start` (chat message lists), mutating content in-place
+before the model receives it.
+
 ---
 
 ## 5. Policy Configuration Reference
@@ -251,9 +375,13 @@ Edit `policy.yaml` to control per-type behaviour.
 version: "1.0"
 default_action: allow   # fallback: mask | block | allow
 
+# Optional: activate a jurisdiction compliance profile
+# profile: india_dpdpa  # or eu_gdpr | us_hipaa
+
 rules:
   - type: email
     action: mask
+    min_confidence: 0.8   # optional; skip rule when confidence < 0.8
   - type: phone
     action: mask
   - type: credit_card
@@ -268,14 +396,24 @@ rules:
 | `block` | Raises `SensitiveDataError` — prompt is never forwarded |
 | `allow` | Passes through unchanged |
 
-Built-in entity types detected by `RegexDetector`:
+Built-in entity types:
 
-| Type | Example match |
-|---|---|
-| `email` | `alice@example.com` |
-| `phone` | `555-867-5309`, `+442071234567` |
-| `credit_card` | `4111-1111-1111-1111` |
-| `api_key` | `sk-…`, `ghp_…`, `AKIA…`, JWT tokens |
+| Type | Source detector | Example match |
+|---|---|---|
+| `email` | `RegexDetector` | `alice@example.com` |
+| `phone` | `RegexDetector` | `555-867-5309`, `+442071234567` |
+| `credit_card` | `RegexDetector` | `4111-1111-1111-1111` |
+| `api_key` | `RegexDetector` | `sk-…`, `ghp_…`, `AKIA…`, JWT tokens |
+| `in_aadhaar` | `IndiaDetector` | `1234 5678 9012` (Verhoeff-validated) |
+| `in_pan` | `IndiaDetector` | `ABCDE1234F` |
+| `in_gstin` | `IndiaDetector` | `22AAAAA0000A1Z5` |
+| `in_ifsc` | `IndiaDetector` | `SBIN0001234` |
+| `in_passport` | `IndiaDetector` | `A1234567` |
+| `in_voter_id` | `IndiaDetector` | `ABC1234567` |
+| `in_phone` | `IndiaDetector` | `+91 98765 43210` |
+| `ssn` | `USDetector` | `123-45-6789` (segment-validated) |
+| `us_passport` | `USDetector` | `A12345678` |
+| `us_ein` | `USDetector` | `12-3456789` |
 
 ---
 
@@ -286,15 +424,19 @@ PromptShield/
 ├── docs/
 │   └── quickstart.md        ← you are here
 ├── promptshield/
-│   ├── shield.py            main Shield class
+│   ├── shield.py            main Shield class (scan / scan_detailed / scan_with_vault)
 │   ├── exceptions.py        SensitiveDataError, ConfigurationError
-│   ├── config/loader.py     YAML loader
-│   ├── detector/            BaseDetector + RegexDetector
-│   ├── policy/              Action, Rule, PolicyConfig, PolicyEngine
+│   ├── results.py           ScanResult, EntityResult, risk scoring
+│   ├── vault.py             PseudonymVault — reversible pseudonymization
+│   ├── config/loader.py     YAML loader (supports `profile:` key)
+│   ├── detector/            BaseDetector + RegexDetector + IndiaDetector + USDetector
+│   ├── profiles/            india_dpdpa, eu_gdpr, us_hipaa compliance packs
+│   ├── adapters/            wrap_openai(), get_langchain_callback()
+│   ├── policy/              Action, Rule (min_confidence), PolicyConfig, PolicyEngine
 │   ├── actions/             masker.py, blocker.py
 │   ├── logger/              structured JSON audit logger
 │   └── middleware/          FastAPI/Starlette middleware (optional)
-├── tests/                   62 pytest tests
+├── tests/                   206 pytest tests
 ├── example_usage.py         runnable demo
 ├── policy.yaml              default policy
 └── pyproject.toml           package metadata + dependencies

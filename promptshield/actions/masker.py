@@ -139,6 +139,40 @@ def _mask_in_gstin(value: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# US-specific masking helpers
+# ---------------------------------------------------------------------------
+
+def _mask_ssn(value: str) -> str:
+    """Mask SSN, keeping only the last four digits.
+
+    Example: ``123-45-6789`` → ``***-**-6789``
+    """
+    digits = re.sub(r"\D", "", value)
+    last_four = digits[-4:] if len(digits) >= 4 else "****"
+    return f"***-**-{last_four}"
+
+
+def _mask_us_passport(value: str) -> str:
+    """Mask a US passport number, keeping only the leading letter.
+
+    Example: ``A12345678`` → ``A********``
+    """
+    if len(value) <= 1:
+        return "***"
+    return f"{value[0]}{'*' * (len(value) - 1)}"
+
+
+def _mask_us_ein(value: str) -> str:
+    """Mask an EIN, keeping only the 2-digit prefix.
+
+    Example: ``12-3456789`` → ``12-*******``
+    """
+    digits = re.sub(r"\D", "", value)
+    prefix = digits[:2] if len(digits) >= 2 else "**"
+    return f"{prefix}-*******"
+
+
+# ---------------------------------------------------------------------------
 # Dispatch table
 # ---------------------------------------------------------------------------
 
@@ -155,6 +189,10 @@ _MASKERS: Dict[str, Callable[[str], str]] = {
     "in_voter_id": _mask_in_voter_id,
     "in_ifsc": _mask_in_ifsc,
     "in_gstin": _mask_in_gstin,
+    # US-specific
+    "ssn": _mask_ssn,
+    "us_passport": _mask_us_passport,
+    "us_ein": _mask_us_ein,
 }
 
 
