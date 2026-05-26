@@ -16,12 +16,16 @@ class DetectedEntity:
         value: The exact substring that was matched.
         start: Inclusive start index in the source text.
         end: Exclusive end index in the source text.
+        confidence: Detector confidence in the match, 0.0–1.0.  Defaults to
+            ``1.0`` (full confidence) for regex / checksum-validated matches.
+            Custom detectors can emit lower values for probabilistic detections.
     """
 
     entity_type: str
     value: str
     start: int
     end: int
+    confidence: float = 1.0
 
 
 class BaseDetector(ABC):

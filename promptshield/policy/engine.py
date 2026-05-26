@@ -2,7 +2,7 @@
 
 from typing import Dict, List
 
-from .models import Action, PolicyConfig
+from .models import Action, PolicyConfig, Rule
 from ..detector.base import DetectedEntity
 
 
@@ -14,6 +14,10 @@ class PolicyEngine:
     Rules are stored in a dictionary keyed by entity type for O(1) lookup.
     When no rule matches an entity type, :attr:`PolicyConfig.default_action`
     is returned.
+
+    If a rule carries a ``min_confidence`` threshold and the detected entity's
+    ``confidence`` is below that threshold, the rule is skipped and the default
+    action is returned instead.
     """
 
     def __init__(self, config: PolicyConfig) -> None:
@@ -22,22 +26,31 @@ class PolicyEngine:
             config: The validated policy configuration.
         """
         self._config = config
-        self._rule_map: Dict[str, Action] = {
-            rule.type: rule.action for rule in config.rules
+        # Store full Rule objects so we can read min_confidence.
+        self._rule_map: Dict[str, Rule] = {
+            rule.type: rule for rule in config.rules
         }
 
     def get_action(self, entity: DetectedEntity) -> Action:
         """
         Return the :class:`~promptshield.policy.models.Action` for a single entity.
 
+        If the entity's ``confidence`` is below the matched rule's
+        ``min_confidence``, the rule is skipped and the default action is used.
+
         Args:
             entity: A detected sensitive entity.
 
         Returns:
             The matched action, or :attr:`PolicyConfig.default_action` if no
-            rule covers this entity type.
+            rule covers this entity type or the confidence threshold is not met.
         """
-        return self._rule_map.get(entity.entity_type, self._config.default_action)
+        rule = self._rule_map.get(entity.entity_type)
+        if rule is None:
+            return self._config.default_action
+        if entity.confidence < rule.min_confidence:
+            return self._config.default_action
+        return rule.action
 
     def evaluate(self, entities: List[DetectedEntity]) -> Dict[DetectedEntity, Action]:
         """

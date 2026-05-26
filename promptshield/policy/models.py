@@ -21,10 +21,14 @@ class Rule:
     Attributes:
         type: The entity type to match, e.g. ``"email"``.
         action: The :class:`Action` to take when this type is detected.
+        min_confidence: Only apply this rule when the detected entity's
+            ``confidence`` is at or above this threshold (0.0–1.0).  Entities
+            below the threshold fall back to :attr:`PolicyConfig.default_action`.
     """
 
     type: str
     action: Action
+    min_confidence: float = 0.0
 
 
 @dataclass
