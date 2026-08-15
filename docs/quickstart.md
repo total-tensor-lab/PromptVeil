@@ -171,7 +171,37 @@ Audit log lines (JSON) are printed to stdout alongside the sanitised prompts.
 
 ---
 
-## 4. Using PromptShield in Your Own Code
+## 4. Running Benchmarks
+
+The repository includes a dedicated benchmark suite under `benchmarks/` built
+on `pytest-benchmark` plus `tracemalloc`-based memory sampling.
+
+### Run the full suite
+
+```bash
+uv run python benchmarks/run_benchmarks.py
+```
+
+This writes a timestamped JSON report to `benchmarks/results/` and prints a
+terminal summary table with mean latency, percentile latency, throughput, and
+peak memory where available.
+
+### Pass through extra pytest arguments
+
+```bash
+# Only run scan hot-path benchmarks
+uv run python benchmarks/run_benchmarks.py -k scan_latency
+
+# Collect benchmarks without executing them
+uv run python benchmarks/run_benchmarks.py -- --collect-only
+```
+
+The default `pytest` configuration still targets `tests/`, so benchmarks only
+run when you explicitly invoke the `benchmarks/` path or the runner script.
+
+---
+
+## 5. Using PromptShield in Your Own Code
 
 ### Minimal setup — three lines
 
