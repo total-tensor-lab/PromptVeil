@@ -38,14 +38,18 @@ langchain = [
 ]
 dev = [
     "pytest>=7.4",
+    "pytest-benchmark>=4.0",
     "pytest-cov>=4.1",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+python_files = ["test_*.py", "bench_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "benchmark_suite: performance and memory benchmarks for PromptShield",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
