@@ -1,4 +1,4 @@
-"""CLI entrypoint for PromptShield benchmark runs."""
+"""CLI entrypoint for PromptVeil benchmark runs."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ def _print_summary(payload: dict[str, Any], output_path: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Run PromptShield benchmark suite.",
+        description="Run PromptVeil benchmark suite.",
         epilog="Unknown arguments are forwarded to pytest, for example: -k scan_latency --collect-only",
     )
     parser.add_argument(

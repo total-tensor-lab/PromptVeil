@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from promptshield.detector.india_detector import _COMPILED as INDIA_COMPILED
-from promptshield.detector.india_detector import _valid_aadhaar
+from promptveil.detector.india_detector import _COMPILED as INDIA_COMPILED
+from promptveil.detector.india_detector import _valid_aadhaar
 
 from benchmarks.fixtures.corpus import FULL_STACK_ENTITY_SNIPPETS, build_entity_bundle, build_entity_text, get_corpus_case
 from benchmarks.fixtures.corpus import TEXT_SIZES

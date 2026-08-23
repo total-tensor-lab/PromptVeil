@@ -7,7 +7,7 @@ from functools import lru_cache
 from statistics import mean
 from typing import Iterable, Sequence
 
-from promptshield.detector.base import DetectedEntity
+from promptveil.detector.base import DetectedEntity
 
 TEXT_SIZES = (100, 500, 1_000, 5_000, 20_000)
 ENTITY_DENSITIES = (0.00, 0.05, 0.20, 0.50)

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from promptshield.actions.masker import apply_masks
-from promptshield.policy.engine import PolicyEngine
-from promptshield.policy.models import Action, PolicyConfig, Rule
-from promptshield.results import EntityResult, _compute_risk_score
+from promptveil.actions.masker import apply_masks
+from promptveil.policy.engine import PolicyEngine
+from promptveil.policy.models import Action, PolicyConfig, Rule
+from promptveil.results import EntityResult, _compute_risk_score
 
 from benchmarks.fixtures.corpus import POLICY_ENTITY_COUNTS, build_entity_bundle
 from benchmarks.utils.recording import attach_metadata

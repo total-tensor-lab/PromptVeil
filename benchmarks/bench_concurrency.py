@@ -7,7 +7,7 @@ import threading
 
 import pytest
 
-from promptshield import PseudonymVault
+from promptveil import PseudonymVault
 
 from benchmarks.fixtures.corpus import CONCURRENCY_LEVELS, build_unique_entity_bundle, get_corpus_case
 from benchmarks.utils.recording import attach_metadata

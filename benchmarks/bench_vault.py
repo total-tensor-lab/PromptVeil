@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from promptshield import PseudonymVault
+from promptveil import PseudonymVault
 
 from benchmarks.fixtures.corpus import COMPONENT_ENTITY_COUNTS, FULL_STACK_ENTITY_SNIPPETS, build_entity_bundle
 from benchmarks.utils.recording import attach_metadata

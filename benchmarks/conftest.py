@@ -6,11 +6,11 @@ from typing import Callable
 
 import pytest
 
-from promptshield import PseudonymVault, Shield
-from promptshield.detector.india_detector import IndiaDetector
-from promptshield.detector.regex_detector import RegexDetector
-from promptshield.detector.us_detector import USDetector
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import PseudonymVault, Shield
+from promptveil.detector.india_detector import IndiaDetector
+from promptveil.detector.regex_detector import RegexDetector
+from promptveil.detector.us_detector import USDetector
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 from benchmarks.fixtures.corpus import ALL_POLICY_TYPES
 
