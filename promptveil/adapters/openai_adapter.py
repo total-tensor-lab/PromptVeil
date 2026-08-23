@@ -1,14 +1,14 @@
-"""OpenAI SDK adapter for PromptShield.
+"""OpenAI SDK adapter for PromptVeil.
 
 Wraps an ``openai.OpenAI`` (or ``openai.AsyncOpenAI``) client so that every
 ``chat.completions.create`` call has its message content scanned by a
-:class:`~promptshield.shield.Shield` before being forwarded to the API.
+:class:`~promptveil.shield.Shield` before being forwarded to the API.
 
 Usage::
 
     import openai
-    from promptshield import Shield
-    from promptshield.adapters import wrap_openai
+    from promptveil import Shield
+    from promptveil.adapters import wrap_openai
 
     shield = Shield(config_path="policy.yaml")
     client = wrap_openai(openai.OpenAI(), shield=shield)
@@ -35,13 +35,13 @@ def wrap_openai(client, shield: "Shield", vault: Optional["PseudonymVault"] = No
 
     If *vault* is provided, message content is pseudonymized instead of
     masked.  The vault accumulates tokens across calls — call
-    :meth:`~promptshield.vault.PseudonymVault.restore` on the LLM response
+    :meth:`~promptveil.vault.PseudonymVault.restore` on the LLM response
     to reinstate original values.
 
     Args:
         client:  An ``openai.OpenAI`` or ``openai.AsyncOpenAI`` instance.
-        shield:  A configured :class:`~promptshield.shield.Shield`.
-        vault:   Optional :class:`~promptshield.vault.PseudonymVault` for
+        shield:  A configured :class:`~promptveil.shield.Shield`.
+        vault:   Optional :class:`~promptveil.vault.PseudonymVault` for
                  reversible pseudonymization.  When ``None``, standard
                  masking (irreversible) is used.
 

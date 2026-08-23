@@ -8,7 +8,7 @@ from ..detector.base import DetectedEntity
 
 class PolicyEngine:
     """
-    Evaluates detected entities against a :class:`~promptshield.policy.models.PolicyConfig`
+    Evaluates detected entities against a :class:`~promptveil.policy.models.PolicyConfig`
     and resolves the action to take for each entity.
 
     Rules are stored in a dictionary keyed by entity type for O(1) lookup.
@@ -33,7 +33,7 @@ class PolicyEngine:
 
     def get_action(self, entity: DetectedEntity) -> Action:
         """
-        Return the :class:`~promptshield.policy.models.Action` for a single entity.
+        Return the :class:`~promptveil.policy.models.Action` for a single entity.
 
         If the entity's ``confidence`` is below the matched rule's
         ``min_confidence``, the rule is skipped and the default action is used.
@@ -60,7 +60,7 @@ class PolicyEngine:
             entities: Detected entities to evaluate.
 
         Returns:
-            ``dict`` mapping each :class:`~promptshield.detector.base.DetectedEntity`
-            to its resolved :class:`~promptshield.policy.models.Action`.
+            ``dict`` mapping each :class:`~promptveil.detector.base.DetectedEntity`
+            to its resolved :class:`~promptveil.policy.models.Action`.
         """
         return {entity: self.get_action(entity) for entity in entities}

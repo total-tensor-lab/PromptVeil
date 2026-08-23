@@ -6,7 +6,7 @@ from ..exceptions import SensitiveDataError
 
 def block(entity: DetectedEntity) -> None:
     """
-    Raise a :class:`~promptshield.exceptions.SensitiveDataError` for a blocked entity.
+    Raise a :class:`~promptveil.exceptions.SensitiveDataError` for a blocked entity.
 
     This function always raises; it never returns normally.
 

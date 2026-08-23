@@ -1,8 +1,8 @@
-"""LangChain callback handler for PromptShield.
+"""LangChain callback handler for PromptVeil.
 
 Provides a :func:`get_langchain_callback` factory that returns a
 ``langchain_core.callbacks.BaseCallbackHandler`` subclass configured to scan
-prompts via a :class:`~promptshield.shield.Shield`.
+prompts via a :class:`~promptveil.shield.Shield`.
 
 ``langchain-core`` is a soft dependency — importing this module does **not**
 require it to be installed.  The class is only materialised when
@@ -11,13 +11,13 @@ require it to be installed.  The class is only materialised when
 Usage::
 
     from langchain_openai import ChatOpenAI
-    from promptshield import Shield
-    from promptshield.adapters import get_langchain_callback
+    from promptveil import Shield
+    from promptveil.adapters import get_langchain_callback
 
     shield = Shield(config_path="policy.yaml")
-    PromptShieldCallback = get_langchain_callback()
+    PromptVeilCallback = get_langchain_callback()
 
-    llm = ChatOpenAI(callbacks=[PromptShieldCallback(shield)])
+    llm = ChatOpenAI(callbacks=[PromptVeilCallback(shield)])
     # Every LLM / chat-model invocation is now scanned automatically.
 """
 
@@ -31,12 +31,12 @@ if TYPE_CHECKING:
 
 def get_langchain_callback() -> Type:
     """
-    Build and return the ``PromptShieldCallback`` class (requires
+    Build and return the ``PromptVeilCallback`` class (requires
     ``langchain-core``).
 
     Returns:
         A :class:`langchain_core.callbacks.BaseCallbackHandler` subclass that
-        scans LLM inputs via :class:`~promptshield.shield.Shield`.
+        scans LLM inputs via :class:`~promptveil.shield.Shield`.
 
     Raises:
         ImportError: If ``langchain-core`` is not installed.
@@ -49,13 +49,13 @@ def get_langchain_callback() -> Type:
             "Install it with: pip install langchain-core"
         ) from None
 
-    class PromptShieldCallback(BaseCallbackHandler):
+    class PromptVeilCallback(BaseCallbackHandler):
         """
         LangChain callback handler that intercepts LLM and chat-model inputs
-        and scans them via PromptShield.
+        and scans them via PromptVeil.
 
         Args:
-            shield: A configured :class:`~promptshield.shield.Shield` instance.
+            shield: A configured :class:`~promptveil.shield.Shield` instance.
         """
 
         def __init__(self, shield: "Shield") -> None:
@@ -91,4 +91,4 @@ def get_langchain_callback() -> Type:
                     ):
                         msg.content = self._shield.scan(msg.content)
 
-    return PromptShieldCallback
+    return PromptVeilCallback

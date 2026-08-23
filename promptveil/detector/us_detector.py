@@ -58,7 +58,7 @@ class USDetector(BaseDetector):
             text: The input string to scan.
 
         Returns:
-            Non-overlapping list of :class:`~promptshield.detector.base.DetectedEntity`
+            Non-overlapping list of :class:`~promptveil.detector.base.DetectedEntity`
             instances sorted by start position.
         """
         entities: List[DetectedEntity] = []

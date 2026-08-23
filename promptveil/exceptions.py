@@ -1,11 +1,11 @@
-"""Custom exceptions for PromptShield."""
+"""Custom exceptions for PromptVeil."""
 
 
-class PromptShieldError(Exception):
-    """Base exception for all PromptShield errors."""
+class PromptVeilError(Exception):
+    """Base exception for all PromptVeil errors."""
 
 
-class SensitiveDataError(PromptShieldError):
+class SensitiveDataError(PromptVeilError):
     """
     Raised when sensitive data is detected and the policy action is 'block'.
 
@@ -18,5 +18,5 @@ class SensitiveDataError(PromptShieldError):
         self.entity_type = entity_type
 
 
-class ConfigurationError(PromptShieldError):
+class ConfigurationError(PromptVeilError):
     """Raised when the policy configuration is invalid or cannot be loaded."""

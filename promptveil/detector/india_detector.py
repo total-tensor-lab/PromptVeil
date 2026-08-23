@@ -125,12 +125,12 @@ class IndiaDetector(BaseDetector):
     * ``in_ifsc`` — IFSC bank code (e.g. ``SBIN0001234``)
     * ``in_gstin`` — GST Identification Number (15-character)
 
-    Use alongside :class:`~promptshield.detector.regex_detector.RegexDetector`
+    Use alongside :class:`~promptveil.detector.regex_detector.RegexDetector`
     to cover both global and India-specific PII::
 
-        from promptshield import Shield
-        from promptshield.detector import IndiaDetector, RegexDetector
-        from promptshield.policy.models import Action, PolicyConfig, Rule
+        from promptveil import Shield
+        from promptveil.detector import IndiaDetector, RegexDetector
+        from promptveil.policy.models import Action, PolicyConfig, Rule
 
         shield = Shield(
             config=PolicyConfig(
@@ -162,7 +162,7 @@ class IndiaDetector(BaseDetector):
             text: The input string to scan.
 
         Returns:
-            List of non-overlapping :class:`~promptshield.detector.base.DetectedEntity`
+            List of non-overlapping :class:`~promptveil.detector.base.DetectedEntity`
             instances sorted by start position.
         """
         entities: List[DetectedEntity] = []

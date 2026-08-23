@@ -1,15 +1,15 @@
 """
-PromptShield — privacy and safety middleware for LLM applications.
+PromptVeil — privacy and safety middleware for LLM applications.
 
 Quickstart::
 
-    from promptshield import Shield
+    from promptveil import Shield
 
     shield = Shield(config_path="policy.yaml")
     safe_prompt = shield.scan(prompt)
 """
 
-from .exceptions import ConfigurationError, PromptShieldError, SensitiveDataError
+from .exceptions import ConfigurationError, PromptVeilError, SensitiveDataError
 from .results import EntityResult, ScanResult
 from .shield import Shield
 from .vault import PseudonymVault
@@ -21,6 +21,6 @@ __all__ = [
     "PseudonymVault",
     "SensitiveDataError",
     "ConfigurationError",
-    "PromptShieldError",
+    "PromptVeilError",
 ]
-__version__ = "0.2.0"
+__version__ = "0.1.0"

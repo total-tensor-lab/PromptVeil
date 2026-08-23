@@ -1,8 +1,8 @@
-# PromptShield
+# PromptVeil
 
 > Privacy and safety middleware for LLM applications.
 
-PromptShield intercepts prompts **before** they reach an LLM API, detects
+PromptVeil intercepts prompts **before** they reach an LLM API, detects
 sensitive information (PII, secrets), applies configurable policies
 (mask · block · allow), and produces structured JSON audit logs for compliance.
 
@@ -59,7 +59,7 @@ Requires **Python ≥ 3.10**.
 ## Quick Start
 
 ```python
-from promptshield import Shield
+from promptveil import Shield
 
 shield = Shield(config_path="policy.yaml")
 
@@ -94,7 +94,7 @@ print(result.safe_text)    # sanitised prompt
 ### Reversible pseudonymization
 
 ```python
-from promptshield import PseudonymVault
+from promptveil import PseudonymVault
 
 vault = PseudonymVault()
 pseudo_text, vault = shield.scan_with_vault("Email alice@example.com", vault=vault)
@@ -107,7 +107,7 @@ final = vault.restore(llm_response)           # restore originals in the reply
 
 ```python
 import openai
-from promptshield.adapters import wrap_openai
+from promptveil.adapters import wrap_openai
 
 client = openai.OpenAI()
 wrap_openai(client, shield=shield)            # patches client in-place
@@ -153,7 +153,7 @@ Profiles bundle a pre-configured `PolicyConfig` and the appropriate detectors
 for a jurisdiction. Activate via the YAML `profile:` key or programmatically:
 
 ```python
-from promptshield.profiles import load_profile
+from promptveil.profiles import load_profile
 
 profile = load_profile("us_hipaa")   # or india_dpdpa / eu_gdpr
 shield = Shield(config=profile.policy, detectors=profile.detectors)
@@ -228,8 +228,8 @@ Register an additional detector at runtime.
 ## Programmatic Config (no YAML file)
 
 ```python
-from promptshield import Shield
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 config = PolicyConfig(
     rules=[
@@ -253,7 +253,7 @@ Subclass `BaseDetector` to add any detection logic:
 
 ```python
 import re
-from promptshield.detector.base import BaseDetector, DetectedEntity
+from promptveil.detector.base import BaseDetector, DetectedEntity
 
 class SSNDetector(BaseDetector):
     _PATTERN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
@@ -280,12 +280,12 @@ shield = Shield(
 
 ```python
 from fastapi import FastAPI
-from promptshield import Shield
-from promptshield.middleware import PromptShieldMiddleware
+from promptveil import Shield
+from promptveil.middleware import PromptVeilMiddleware
 
 app = FastAPI()
 shield = Shield(config_path="policy.yaml")
-app.add_middleware(PromptShieldMiddleware, shield=shield, prompt_field="prompt")
+app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field="prompt")
 ```
 
 POST requests with `Content-Type: application/json` that contain the
@@ -297,7 +297,7 @@ POST requests with `Content-Type: application/json` that contain the
 ## LangChain Adapter
 
 ```python
-from promptshield.adapters import get_langchain_callback
+from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()   # lazy-imported; requires langchain-core
 callback = CallbackClass(shield)
@@ -339,7 +339,7 @@ Raw sensitive values are **never** stored in logs.
 ## Project Structure
 
 ```
-promptshield/
+promptveil/
 ├── __init__.py             # Public API: Shield, exceptions
 ├── shield.py               # Main Shield class — orchestration
 ├── exceptions.py           # SensitiveDataError, ConfigurationError
@@ -371,5 +371,5 @@ uv run pytest -v
 # or: python -m pytest -v
 ```
 
-206 tests, < 1 s.
+234 tests, < 1 s.
 
