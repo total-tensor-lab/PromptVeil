@@ -19,7 +19,7 @@ def _parse_rules(raw_rules: Any) -> List[Rule]:
         raw_rules: The value of the ``rules`` key from the YAML document.
 
     Returns:
-        List of validated :class:`~promptshield.policy.models.Rule` objects.
+        List of validated :class:`~promptveil.policy.models.Rule` objects.
 
     Raises:
         ConfigurationError: If any rule is malformed or contains an
@@ -91,7 +91,7 @@ def _read_raw_yaml(config_path: Union[str, Path]) -> Dict[str, Any]:
 
 def load_config(config_path: Union[str, Path]) -> PolicyConfig:
     """
-    Load and validate a :class:`~promptshield.policy.models.PolicyConfig`
+    Load and validate a :class:`~promptveil.policy.models.PolicyConfig`
     from a YAML file.  Backward-compatible; ignores ``profile:`` detector
     side-effects (use :func:`load_config_with_profile` from ``Shield``).
 
@@ -117,7 +117,7 @@ def load_config(config_path: Union[str, Path]) -> PolicyConfig:
         config_path: Path to the ``.yaml`` policy file.
 
     Returns:
-        A validated :class:`~promptshield.policy.models.PolicyConfig`.
+        A validated :class:`~promptveil.policy.models.PolicyConfig`.
 
     Raises:
         ConfigurationError: If the file is missing, cannot be parsed as YAML,

@@ -53,7 +53,7 @@ class EntityResult:
 @dataclass(frozen=True)
 class ScanResult:
     """
-    Rich output from :meth:`~promptshield.shield.Shield.scan_detailed`.
+    Rich output from :meth:`~promptveil.shield.Shield.scan_detailed`.
 
     Attributes:
         safe_text:   Sanitised prompt (entities replaced by masked forms).

@@ -1,4 +1,4 @@
-"""Framework-native adapters for PromptShield.
+"""Framework-native adapters for PromptVeil.
 
 Available adapters
 ------------------

@@ -1,9 +1,9 @@
 """
-PromptShield — core Shield class.
+PromptVeil — core Shield class.
 
 This module exposes the primary public API.  Import and use it as::
 
-    from promptshield import Shield
+    from promptveil import Shield
 
     shield = Shield(config_path="policy.yaml")
     safe_prompt = shield.scan(prompt)
@@ -27,14 +27,14 @@ from .vault import PseudonymVault
 
 class Shield:
     """
-    Central orchestrator for PromptShield.
+    Central orchestrator for PromptVeil.
 
     Wires together detection, policy evaluation, action execution, and audit
     logging into a single :meth:`scan` call.
 
     Example::
 
-        from promptshield import Shield
+        from promptveil import Shield
 
         shield = Shield(config_path="policy.yaml")
 
@@ -45,7 +45,7 @@ class Shield:
     You can also construct a :class:`Shield` programmatically without a YAML
     file::
 
-        from promptshield.policy.models import Action, PolicyConfig, Rule
+        from promptveil.policy.models import Action, PolicyConfig, Rule
 
         config = PolicyConfig(
             rules=[Rule(type="email", action=Action.MASK)],
@@ -62,18 +62,18 @@ class Shield:
         logger: Optional[AuditLogger] = None,
     ) -> None:
         """
-        Initialise PromptShield.
+        Initialise PromptVeil.
 
         Exactly one of *config_path* or *config* must be provided.
 
         Args:
             config_path: Path to a YAML policy file.
-            config: A pre-built :class:`~promptshield.policy.models.PolicyConfig`.
+            config: A pre-built :class:`~promptveil.policy.models.PolicyConfig`.
                 Useful for programmatic configuration without a YAML file.
-            detectors: Ordered list of :class:`~promptshield.detector.base.BaseDetector`
+            detectors: Ordered list of :class:`~promptveil.detector.base.BaseDetector`
                 instances. Defaults to ``[RegexDetector()]``.  Add custom
                 detectors here or via :meth:`add_detector`.
-            logger: Custom :class:`~promptshield.logger.audit_logger.AuditLogger`.
+            logger: Custom :class:`~promptveil.logger.audit_logger.AuditLogger`.
                 Defaults to a logger that writes JSON lines to ``stdout``.
 
         Raises:
@@ -119,7 +119,7 @@ class Shield:
         1. Run every registered detector against the prompt.
         2. Evaluate each detected entity against policy rules.
         3. **Block** — if any entity matches a ``block`` rule, log the event
-           and raise :class:`~promptshield.exceptions.SensitiveDataError`
+           and raise :class:`~promptveil.exceptions.SensitiveDataError`
            immediately (before any masking).
         4. **Mask** — replace all entities matching ``mask`` rules with
            redacted placeholders.
@@ -205,7 +205,7 @@ class Shield:
 
         Args:
             detector: Any object that implements
-                :class:`~promptshield.detector.base.BaseDetector`.
+                :class:`~promptveil.detector.base.BaseDetector`.
         """
         self._detectors.append(detector)
 
@@ -215,7 +215,7 @@ class Shield:
 
     def scan_detailed(self, prompt: str) -> ScanResult:
         """
-        Scan a prompt and return a rich :class:`~promptshield.results.ScanResult`.
+        Scan a prompt and return a rich :class:`~promptveil.results.ScanResult`.
 
         Identical policy semantics to :meth:`scan` (block still raises), but
         instead of returning a plain string this method returns a structured
@@ -226,7 +226,7 @@ class Shield:
             prompt: The raw input text to evaluate.
 
         Returns:
-            :class:`~promptshield.results.ScanResult` with ``safe_text``,
+            :class:`~promptveil.results.ScanResult` with ``safe_text``,
             ``entities``, ``risk_score``, ``risk_level``, and ``was_mutated``.
 
         Raises:
@@ -326,7 +326,7 @@ class Shield:
         Tokens follow the pattern ``<ENTITY_TYPE_N>`` (e.g. ``<EMAIL_1>``).
         The same original value always receives the same token within a vault
         instance.  After the LLM processes the pseudonymized text, call
-        :meth:`~promptshield.vault.PseudonymVault.restore` on the response to
+        :meth:`~promptveil.vault.PseudonymVault.restore` on the response to
         reinstate original values.
 
         Example::
@@ -341,7 +341,7 @@ class Shield:
 
         Args:
             prompt: The raw input text to evaluate.
-            vault:  An existing :class:`~promptshield.vault.PseudonymVault`
+            vault:  An existing :class:`~promptveil.vault.PseudonymVault`
                     to reuse (for multi-turn consistency).  A new vault is
                     created when ``None``.
 

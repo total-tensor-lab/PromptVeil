@@ -1,19 +1,19 @@
 """
-Optional FastAPI / Starlette middleware for PromptShield.
+Optional FastAPI / Starlette middleware for PromptVeil.
 
 Install the extra dependency first::
 
-    pip install "promptshield[fastapi]"
+    pip install "promptveil[fastapi]"
 
 Then add the middleware to your app::
 
     from fastapi import FastAPI
-    from promptshield import Shield
-    from promptshield.middleware import PromptShieldMiddleware
+    from promptveil import Shield
+    from promptveil.middleware import PromptVeilMiddleware
 
     app = FastAPI()
     shield = Shield(config_path="policy.yaml")
-    app.add_middleware(PromptShieldMiddleware, shield=shield, prompt_field="prompt")
+    app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field="prompt")
 """
 
 import json
@@ -27,7 +27,7 @@ from ..exceptions import SensitiveDataError
 from ..shield import Shield
 
 
-class PromptShieldMiddleware(BaseHTTPMiddleware):
+class PromptVeilMiddleware(BaseHTTPMiddleware):
     """
     Starlette/FastAPI middleware that intercepts POST request bodies and scans
     the configured *prompt_field* for sensitive data before forwarding the
@@ -44,7 +44,7 @@ class PromptShieldMiddleware(BaseHTTPMiddleware):
 
     Args:
         app: The ASGI application to wrap.
-        shield: A configured :class:`~promptshield.shield.Shield` instance.
+        shield: A configured :class:`~promptveil.shield.Shield` instance.
         prompt_field: The JSON body key that holds the prompt text.
             Defaults to ``"prompt"``.
     """

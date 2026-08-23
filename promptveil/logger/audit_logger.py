@@ -1,4 +1,4 @@
-"""Structured JSON audit logger for PromptShield scan events."""
+"""Structured JSON audit logger for PromptVeil scan events."""
 
 import json
 import logging
@@ -59,12 +59,12 @@ class AuditLogger:
 
     def __init__(
         self,
-        name: str = "promptshield.audit",
+        name: str = "promptveil.audit",
         stream: Optional[IO[str]] = None,
     ) -> None:
         """
         Args:
-            name: Python logger name. Defaults to ``"promptshield.audit"``.
+            name: Python logger name. Defaults to ``"promptveil.audit"``.
             stream: Output stream for log lines. Defaults to ``sys.stdout``.
         """
         self._logger = logging.getLogger(name)
@@ -112,7 +112,7 @@ class AuditLogger:
         Emit a warning-level log event for a blocked entity.
 
         Called immediately before raising
-        :class:`~promptshield.exceptions.SensitiveDataError`.
+        :class:`~promptveil.exceptions.SensitiveDataError`.
 
         Args:
             entity: The entity whose type matched a ``block`` rule.

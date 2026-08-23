@@ -33,7 +33,7 @@ class BaseDetector(ABC):
     Abstract base class for all PII / secret detectors.
 
     Subclass this to add custom detection logic (e.g. spaCy NER, ML models).
-    Register the detector with :class:`~promptshield.shield.Shield` via
+    Register the detector with :class:`~promptveil.shield.Shield` via
     ``shield.add_detector(my_detector)`` or pass it in the constructor.
     """
 

@@ -1,4 +1,4 @@
-"""Reversible pseudonymization vault for PromptShield.
+"""Reversible pseudonymization vault for PromptVeil.
 
 Replaces detected PII with consistent, numbered tokens (e.g. ``<EMAIL_1>``,
 ``<PHONE_2>``) so that the pseudonymized text can be safely sent to an LLM.

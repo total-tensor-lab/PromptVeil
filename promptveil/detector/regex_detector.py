@@ -11,13 +11,14 @@ from .base import BaseDetector, DetectedEntity
 # ---------------------------------------------------------------------------
 _RAW_PATTERNS: Dict[str, List[str]] = {
     "email": [
-        r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}",
+        r"[a-zA-Z0-9._%+\-]+@(?:[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}|(?:[0-9]{1,3}\.){3}[0-9]{1,3})",
     ],
     "phone": [
         # North-American: (555) 867-5309 / 555.867.5309 / +1 555-867-5309
-        r"\b(?:\+?1[-.\s]?)?\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}\b",
-        # International E.164: +442071234567 or +44 7911 123456
+        r"(?<!\w)(?:\+?1[-.\s]?)?(?:\([0-9]{3}\)[-.\s]?[0-9]{3}[-.\s]?[0-9]{4}|[0-9]{3}[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})\b",
+        # International: +442071234567 or +44 7911 123456
         r"(?<!\w)\+[1-9][0-9]{7,14}\b",
+        r"(?<!\w)\+[1-9][0-9]{0,3}(?:[-.\s][0-9]{2,6}){2,4}\b",
     ],
     "credit_card": [
         # Visa (16 digit)
@@ -36,7 +37,7 @@ _RAW_PATTERNS: Dict[str, List[str]] = {
         r"\bgho_[a-zA-Z0-9]{20,}\b",                         # GitHub OAuth token
         r"\bAKIA[0-9A-Z]{16}\b",                             # AWS access key ID
         r"\bxoxb-[0-9]+-[0-9]+-[a-zA-Z0-9]+\b",            # Slack bot token
-        r"\bAIza[0-9A-Za-z\-_]{35}\b",                      # Google API key
+        r"\bAIza[0-9A-Za-z\-_]{20,}\b",                    # Google API key
         # JWT (three base64url segments separated by dots)
         r"\beyJ[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]*",
         # Stripe keys
@@ -74,17 +75,16 @@ def _resolve_overlaps(entities: List[DetectedEntity]) -> List[DetectedEntity]:
     if not entities:
         return entities
 
-    # Sort: start ASC, then span length DESC (prefer longer at same start).
-    sorted_ents = sorted(entities, key=lambda e: (e.start, -(e.end - e.start)))
-
     result: List[DetectedEntity] = []
-    last_end = -1
 
-    for entity in sorted_ents:
-        if entity.start >= last_end:
+    for entity in sorted(entities, key=lambda e: e.start):
+        if not result or entity.start >= result[-1].end:
             result.append(entity)
-            last_end = entity.end
-        # Overlapping entity: skip (the earlier/longer one already covers this range).
+            continue
+
+        previous = result[-1]
+        if entity.end - entity.start > previous.end - previous.start:
+            result[-1] = entity
 
     return result
 
@@ -99,7 +99,7 @@ class RegexDetector(BaseDetector):
     * ``api_key`` — OpenAI, GitHub PAT, AWS, Slack, Google, JWT
 
     This detector is used by default when no custom detectors are provided
-    to :class:`~promptshield.shield.Shield`.
+    to :class:`~promptveil.shield.Shield`.
     """
 
     @property
@@ -117,7 +117,7 @@ class RegexDetector(BaseDetector):
             text: The input string to scan.
 
         Returns:
-            List of non-overlapping :class:`~promptshield.detector.base.DetectedEntity`
+            List of non-overlapping :class:`~promptveil.detector.base.DetectedEntity`
             instances sorted by start position.
         """
         entities: List[DetectedEntity] = []
