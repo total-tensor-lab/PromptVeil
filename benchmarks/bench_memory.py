@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from promptshield import PseudonymVault
+from promptveil import PseudonymVault
 
 from benchmarks.fixtures.corpus import FULL_STACK_ENTITY_SNIPPETS, VAULT_MEMORY_COUNTS, build_dense_memory_case, build_entity_bundle
 from benchmarks.utils.recording import attach_metadata, measure_memory

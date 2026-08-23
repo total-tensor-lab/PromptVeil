@@ -1,1 +1,1 @@
-"""Benchmark suite for PromptShield."""
+"""Benchmark suite for PromptVeil."""
