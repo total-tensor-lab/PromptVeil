@@ -2,12 +2,12 @@
 
 import pytest
 
-from promptshield import Shield
-from promptshield.detector.india_detector import IndiaDetector, _valid_aadhaar
-from promptshield.detector.regex_detector import RegexDetector
-from promptshield.actions.masker import mask_value
-from promptshield.exceptions import SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.detector.india_detector import IndiaDetector, _valid_aadhaar
+from promptveil.detector.regex_detector import RegexDetector
+from promptveil.actions.masker import mask_value
+from promptveil.exceptions import SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 @pytest.fixture

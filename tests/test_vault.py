@@ -2,9 +2,9 @@
 
 import pytest
 
-from promptshield import PseudonymVault, Shield
-from promptshield.exceptions import SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import PseudonymVault, Shield
+from promptveil.exceptions import SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def make_shield(rules=None, default_action=Action.ALLOW) -> Shield:
@@ -17,14 +17,14 @@ def make_shield(rules=None, default_action=Action.ALLOW) -> Shield:
 class TestPseudonymVaultTokenCreation:
     def test_creates_token_on_first_call(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [DetectedEntity("email", "alice@example.com", 0, 17)]
         result = vault.pseudonymize("alice@example.com", entities)
         assert result == "<EMAIL_1>"
 
     def test_same_value_gets_same_token(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities1 = [DetectedEntity("email", "alice@example.com", 0, 17)]
         entities2 = [DetectedEntity("email", "alice@example.com", 0, 17)]
         vault.pseudonymize("alice@example.com", entities1)
@@ -33,7 +33,7 @@ class TestPseudonymVaultTokenCreation:
 
     def test_different_values_get_different_tokens(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [
             DetectedEntity("email", "a@x.com", 0, 7),
             DetectedEntity("email", "b@y.com", 8, 15),
@@ -43,7 +43,7 @@ class TestPseudonymVaultTokenCreation:
 
     def test_counter_increments_per_type(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [
             DetectedEntity("email", "a@x.com", 0, 7),
             DetectedEntity("email", "b@y.com", 8, 15),
@@ -56,7 +56,7 @@ class TestPseudonymVaultTokenCreation:
 
     def test_different_types_have_independent_counters(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [
             DetectedEntity("email", "a@x.com", 0, 7),
             DetectedEntity("phone", "555-1234", 8, 16),
@@ -73,7 +73,7 @@ class TestPseudonymVaultTokenCreation:
 class TestPseudonymVaultRestore:
     def test_restore_replaces_tokens(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [DetectedEntity("email", "alice@example.com", 0, 17)]
         vault.pseudonymize("alice@example.com", entities)
         restored = vault.restore("Contact <EMAIL_1> for details.")
@@ -81,7 +81,7 @@ class TestPseudonymVaultRestore:
 
     def test_restore_multiple_tokens(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         text = "a@x.com and b@y.com"
         entities = [
             DetectedEntity("email", "a@x.com", 0, 7),
@@ -106,7 +106,7 @@ class TestPseudonymVaultRestore:
 class TestPseudonymVaultLifecycle:
     def test_len_returns_stored_count(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [
             DetectedEntity("email", "a@x.com", 0, 7),
             DetectedEntity("email", "b@y.com", 8, 15),
@@ -116,7 +116,7 @@ class TestPseudonymVaultLifecycle:
 
     def test_clear_resets_vault(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [DetectedEntity("email", "a@x.com", 0, 7)]
         vault.pseudonymize("a@x.com", entities)
         vault.clear()
@@ -125,7 +125,7 @@ class TestPseudonymVaultLifecycle:
 
     def test_token_map_is_copy(self):
         vault = PseudonymVault()
-        from promptshield.detector.base import DetectedEntity
+        from promptveil.detector.base import DetectedEntity
         entities = [DetectedEntity("email", "a@x.com", 0, 7)]
         vault.pseudonymize("a@x.com", entities)
         snapshot = vault.token_map

@@ -2,10 +2,10 @@
 
 import pytest
 
-from promptshield import Shield, ScanResult
-from promptshield.exceptions import SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
-from promptshield.results import EntityResult, _compute_risk_score, _risk_level
+from promptveil import Shield, ScanResult
+from promptveil.exceptions import SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
+from promptveil.results import EntityResult, _compute_risk_score, _risk_level
 
 
 def make_shield(rules=None, default_action=Action.ALLOW) -> Shield:

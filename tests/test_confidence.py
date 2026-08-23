@@ -2,10 +2,10 @@
 
 import pytest
 
-from promptshield import Shield
-from promptshield.detector.base import DetectedEntity
-from promptshield.policy.engine import PolicyEngine
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.detector.base import DetectedEntity
+from promptveil.policy.engine import PolicyEngine
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def make_entity(entity_type: str, value: str = "x", confidence: float = 1.0) -> DetectedEntity:
@@ -99,7 +99,7 @@ rules:
         assert rule.min_confidence == 0.85
 
     def test_invalid_min_confidence_raises(self, tmp_path):
-        from promptshield.exceptions import ConfigurationError
+        from promptveil.exceptions import ConfigurationError
 
         yaml_text = """\
 version: "1.0"
@@ -138,7 +138,7 @@ class TestConfidenceEndToEnd:
     def test_low_confidence_entity_allowed_through(self):
         """A custom detector that emits low-confidence entities should be
         skipped when min_confidence threshold is not met."""
-        from promptshield.detector.base import BaseDetector
+        from promptveil.detector.base import BaseDetector
 
         class LowConfidenceDetector(BaseDetector):
             def detect(self, text: str):
@@ -160,7 +160,7 @@ class TestConfidenceEndToEnd:
         assert result == "keep secret here"
 
     def test_high_confidence_entity_is_masked(self):
-        from promptshield.detector.base import BaseDetector
+        from promptveil.detector.base import BaseDetector
 
         class HighConfidenceDetector(BaseDetector):
             def detect(self, text: str):

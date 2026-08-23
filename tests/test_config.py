@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from promptshield.config.loader import load_config
-from promptshield.exceptions import ConfigurationError
-from promptshield.policy.models import Action
+from promptveil.config.loader import load_config
+from promptveil.exceptions import ConfigurationError
+from promptveil.policy.models import Action
 
 
 def write_yaml(tmp_path: Path, content: str) -> Path:
