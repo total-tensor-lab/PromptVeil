@@ -9,8 +9,9 @@ Tests cover:
 """
 
 import pytest
-from promptshield.detector.regex_detector import RegexDetector, _resolve_overlaps, _COMPILED
-from promptshield.detector.base import DetectedEntity
+from promptveil.detector.regex_detector import RegexDetector, _resolve_overlaps, _COMPILED
+from promptveil.detector.base import DetectedEntity
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 class TestRegexDetectorBasic:
@@ -244,18 +245,22 @@ class TestRegexDetectorIntegration:
 
     def test_detector_in_shield(self):
         """Test that RegexDetector works correctly when added to Shield."""
-        from promptshield.shield import Shield
+        from promptveil.shield import Shield
         
-        shield = Shield()
-        # Shield already has RegexDetector by default
-        entities = shield.scan("Contact alice@example.com")
+        shield = Shield(
+            config=PolicyConfig(
+                rules=[Rule(type="email", action=Action.MASK)],
+            )
+        )
+        # Shield already has RegexDetector by default.
+        result = shield.scan_detailed("Contact alice@example.com")
         
-        assert "alice@example.com" not in entities
-        assert "EMAIL" in entities
+        assert "alice@example.com" not in result.safe_text
+        assert result.entities[0].entity_type == "email"
 
     def test_detector_order_matters(self):
         """Test that detector order affects detection results."""
-        from promptshield.shield import Shield
+        from promptveil.shield import Shield
         
         # Create a custom detector that detects a specific pattern
         class CustomDetector:
@@ -274,13 +279,13 @@ class TestRegexDetectorIntegration:
                     )]
                 return []
         
-        shield = Shield()
+        shield = Shield(config=PolicyConfig(rules=[]))
         shield.add_detector(CustomDetector())
         
-        entities = shield.scan("This is a custom message")
+        result = shield.scan_detailed("This is a custom message")
         
-        assert len(entities) > 0
-        assert any(e.entity_type == "custom" for e in entities)
+        assert len(result.entities) > 0
+        assert any(e.entity_type == "custom" for e in result.entities)
 
 
 class TestRegexDetectorConfidence:
@@ -296,12 +301,12 @@ class TestRegexDetectorConfidence:
 
     def test_confidence_in_result(self):
         """Test that confidence is preserved in Shield results."""
-        from promptshield.shield import Shield
+        from promptveil.shield import Shield
         
-        shield = Shield()
-        entities = shield.scan("Contact alice@example.com")
+        shield = Shield(config=PolicyConfig(rules=[]))
+        result = shield.scan_detailed("Contact alice@example.com")
         
-        assert entities[0].confidence == 1.0
+        assert result.entities[0].confidence == 1.0
 
 
 class TestRegexDetectorPatterns:

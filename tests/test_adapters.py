@@ -2,10 +2,10 @@
 
 import pytest
 
-from promptshield import Shield
-from promptshield.adapters import get_langchain_callback, wrap_openai
-from promptshield.exceptions import SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.adapters import get_langchain_callback, wrap_openai
+from promptveil.exceptions import SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def make_shield(rules=None, default_action=Action.ALLOW) -> Shield:

@@ -2,7 +2,7 @@
 
 import pytest
 
-from promptshield.detector.regex_detector import RegexDetector
+from promptveil.detector.regex_detector import RegexDetector
 
 
 @pytest.fixture
