@@ -1,19 +1,25 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "promptshield"
+name = "promptveil"
 version = "0.1.0"
 description = "Privacy and safety middleware for LLM applications"
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
+authors = [
+    { name = "Total Tensor Labs" },
+]
+maintainers = [
+    { name = "Total Tensor Labs" },
+]
 keywords = ["llm", "pii", "privacy", "safety", "middleware", "redaction"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -21,9 +27,15 @@ classifiers = [
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
 dependencies = [
     "PyYAML>=6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/total-tensor-lab/PromptShield"
+Repository = "https://github.com/total-tensor-lab/PromptShield"
+Issues = "https://github.com/total-tensor-lab/PromptShield/issues"
 
 [project.optional-dependencies]
 fastapi = [
@@ -38,15 +50,22 @@ langchain = [
 ]
 dev = [
     "pytest>=7.4",
+    "pytest-benchmark>=4.0",
     "pytest-cov>=4.1",
+    "fastapi>=0.100.0",
+    "starlette>=0.27.0",
+    "httpx>=0.24.0",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-python_files = ["test_*.py"]
+python_files = ["test_*.py", "bench_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "benchmark_suite: performance and memory benchmarks for PromptVeil",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["promptshield*"]
+include = ["promptveil*"]

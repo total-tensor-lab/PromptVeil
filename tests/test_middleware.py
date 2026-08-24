@@ -1,4 +1,4 @@
-"""Tests for PromptShieldMiddleware (FastAPI/Starlette integration)."""
+"""Tests for PromptVeilMiddleware (FastAPI/Starlette integration)."""
 
 import json
 
@@ -6,9 +6,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from promptshield import Shield
-from promptshield.middleware import PromptShieldMiddleware
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.middleware import PromptVeilMiddleware
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 # ---------------------------------------------------------------------------
@@ -16,7 +16,7 @@ from promptshield.policy.models import Action, PolicyConfig, Rule
 # ---------------------------------------------------------------------------
 
 def make_app(rules=None, default_action=Action.ALLOW, prompt_field="prompt") -> TestClient:
-    """Build a minimal FastAPI app with PromptShieldMiddleware and return a TestClient."""
+    """Build a minimal FastAPI app with PromptVeilMiddleware and return a TestClient."""
     app = FastAPI()
     shield = Shield(
         config=PolicyConfig(
@@ -24,7 +24,7 @@ def make_app(rules=None, default_action=Action.ALLOW, prompt_field="prompt") -> 
             default_action=default_action,
         )
     )
-    app.add_middleware(PromptShieldMiddleware, shield=shield, prompt_field=prompt_field)
+    app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field=prompt_field)
 
     @app.post("/chat")
     async def chat(body: dict):
@@ -49,7 +49,7 @@ class TestMiddlewareAllow:
         app = FastAPI()
         shield = Shield(config=PolicyConfig(rules=[]))
 
-        app.add_middleware(PromptShieldMiddleware, shield=shield)
+        app.add_middleware(PromptVeilMiddleware, shield=shield)
 
         @app.get("/chat")
         async def get_chat():
@@ -158,7 +158,7 @@ class TestMiddlewareBlock:
         shield = Shield(
             config=PolicyConfig(rules=[Rule(type="api_key", action=Action.BLOCK)])
         )
-        app.add_middleware(PromptShieldMiddleware, shield=shield)
+        app.add_middleware(PromptVeilMiddleware, shield=shield)
 
         @app.post("/chat")
         async def handler(body: dict):

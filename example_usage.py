@@ -1,5 +1,5 @@
 """
-PromptShield — example usage script.
+PromptVeil — example usage script.
 
 Run from the project root::
 
@@ -9,12 +9,12 @@ Run from the project root::
 
 import re
 
-from promptshield import Shield
-from promptshield.detector.base import BaseDetector, DetectedEntity
-from promptshield.detector.india_detector import IndiaDetector
-from promptshield.detector.regex_detector import RegexDetector
-from promptshield.exceptions import SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.detector.base import BaseDetector, DetectedEntity
+from promptveil.detector.india_detector import IndiaDetector
+from promptveil.detector.regex_detector import RegexDetector
+from promptveil.exceptions import SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def separator(title: str) -> None:

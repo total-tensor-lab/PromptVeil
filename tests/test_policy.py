@@ -2,9 +2,9 @@
 
 import pytest
 
-from promptshield.detector.base import DetectedEntity
-from promptshield.policy.engine import PolicyEngine
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil.detector.base import DetectedEntity
+from promptveil.policy.engine import PolicyEngine
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def make_entity(entity_type: str, value: str = "x") -> DetectedEntity:

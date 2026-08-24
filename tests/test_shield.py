@@ -2,9 +2,9 @@
 
 import pytest
 
-from promptshield import Shield
-from promptshield.exceptions import ConfigurationError, SensitiveDataError
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.exceptions import ConfigurationError, SensitiveDataError
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
 def make_shield(rules=None, default_action=Action.ALLOW) -> Shield:

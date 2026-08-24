@@ -1,4 +1,4 @@
-# PromptShield Policy Configuration
+# PromptVeil Policy Configuration
 # -----------------------------------
 # version     : config schema version (informational)
 # default_action : fallback when no rule matches — mask | block | allow

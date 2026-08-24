@@ -1,7 +1,7 @@
-# PromptShield — Quickstart Guide
+# PromptVeil — Quickstart Guide
 
 This guide walks you through setting up a local development environment,
-running the test suite, and using PromptShield in your own code.
+running the test suite, and using PromptVeil in your own code.
 
 ---
 
@@ -68,12 +68,12 @@ uv pip install -e ".[dev,fastapi,openai,langchain]"
 ```
 
 > **Tip:** The `-e` flag installs in *editable* mode — any change you make to
-> `promptshield/` is immediately reflected without reinstalling.
+> `promptveil/` is immediately reflected without reinstalling.
 
 ### Verify the install
 
 ```bash
-uv run python -c "from promptshield import Shield; print('OK')"
+uv run python -c "from promptveil import Shield; print('OK')"
 # → OK
 ```
 
@@ -125,7 +125,7 @@ uv run pytest tests/test_shield.py::TestShieldBlock::test_blocks_api_key -v
 ### Run with coverage report
 
 ```bash
-uv run pytest --cov=promptshield --cov-report=term-missing
+uv run pytest --cov=promptveil --cov-report=term-missing
 ```
 
 ### Test files and what they cover
@@ -171,12 +171,42 @@ Audit log lines (JSON) are printed to stdout alongside the sanitised prompts.
 
 ---
 
-## 4. Using PromptShield in Your Own Code
+## 4. Running Benchmarks
+
+The repository includes a dedicated benchmark suite under `benchmarks/` built
+on `pytest-benchmark` plus `tracemalloc`-based memory sampling.
+
+### Run the full suite
+
+```bash
+uv run python benchmarks/run_benchmarks.py
+```
+
+This writes a timestamped JSON report to `benchmarks/results/` and prints a
+terminal summary table with mean latency, percentile latency, throughput, and
+peak memory where available.
+
+### Pass through extra pytest arguments
+
+```bash
+# Only run scan hot-path benchmarks
+uv run python benchmarks/run_benchmarks.py -k scan_latency
+
+# Collect benchmarks without executing them
+uv run python benchmarks/run_benchmarks.py -- --collect-only
+```
+
+The default `pytest` configuration still targets `tests/`, so benchmarks only
+run when you explicitly invoke the `benchmarks/` path or the runner script.
+
+---
+
+## 5. Using PromptVeil in Your Own Code
 
 ### Minimal setup — three lines
 
 ```python
-from promptshield import Shield
+from promptveil import Shield
 
 shield = Shield(config_path="policy.yaml")
 safe_prompt = shield.scan(prompt)
@@ -185,8 +215,8 @@ safe_prompt = shield.scan(prompt)
 ### Handle blocked prompts
 
 ```python
-from promptshield import Shield
-from promptshield.exceptions import SensitiveDataError
+from promptveil import Shield
+from promptveil.exceptions import SensitiveDataError
 
 shield = Shield(config_path="policy.yaml")
 
@@ -200,8 +230,8 @@ except SensitiveDataError as e:
 ### Use a programmatic config instead of a YAML file
 
 ```python
-from promptshield import Shield
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 config = PolicyConfig(
     rules=[
@@ -244,7 +274,7 @@ shield = Shield(config_path="policy.yaml")  # profile detectors loaded automatic
 Or programmatically:
 
 ```python
-from promptshield.profiles import load_profile
+from promptveil.profiles import load_profile
 
 profile = load_profile("us_hipaa")
 shield = Shield(config=profile.policy, detectors=profile.detectors)
@@ -261,7 +291,7 @@ Available profiles:
 ### Pseudonymization vault (reversible)
 
 ```python
-from promptshield import PseudonymVault
+from promptveil import PseudonymVault
 
 vault = PseudonymVault()
 pseudo, vault = shield.scan_with_vault(
@@ -280,7 +310,7 @@ Pass the same `vault` instance across multiple turns to keep tokens stable throu
 
 ```python
 import re
-from promptshield.detector.base import BaseDetector, DetectedEntity
+from promptveil.detector.base import BaseDetector, DetectedEntity
 
 class SSNDetector(BaseDetector):
     _PATTERN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
@@ -302,12 +332,12 @@ shield = Shield(config=config, detectors=[SSNDetector()])
 
 ```python
 from fastapi import FastAPI
-from promptshield import Shield
-from promptshield.middleware import PromptShieldMiddleware
+from promptveil import Shield
+from promptveil.middleware import PromptVeilMiddleware
 
 app = FastAPI()
 shield = Shield(config_path="policy.yaml")
-app.add_middleware(PromptShieldMiddleware, shield=shield, prompt_field="prompt")
+app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field="prompt")
 ```
 
 Every `POST /your-endpoint` with a JSON body that contains `"prompt"` will be
@@ -331,7 +361,7 @@ uv pip install ".[openai]"
 
 ```python
 import openai
-from promptshield.adapters import wrap_openai
+from promptveil.adapters import wrap_openai
 
 client = openai.OpenAI()
 wrap_openai(client, shield=shield)   # patches client in-place
@@ -352,7 +382,7 @@ uv pip install ".[langchain]"
 ```
 
 ```python
-from promptshield.adapters import get_langchain_callback
+from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()
 callback = CallbackClass(shield)
@@ -420,10 +450,10 @@ Built-in entity types:
 ## 6. Project Layout (quick reference)
 
 ```
-PromptShield/
+PromptVeil/
 ├── docs/
 │   └── quickstart.md        ← you are here
-├── promptshield/
+├── promptveil/
 │   ├── shield.py            main Shield class (scan / scan_detailed / scan_with_vault)
 │   ├── exceptions.py        SensitiveDataError, ConfigurationError
 │   ├── results.py           ScanResult, EntityResult, risk scoring
@@ -436,7 +466,7 @@ PromptShield/
 │   ├── actions/             masker.py, blocker.py
 │   ├── logger/              structured JSON audit logger
 │   └── middleware/          FastAPI/Starlette middleware (optional)
-├── tests/                   206 pytest tests
+├── tests/                   234 pytest tests
 ├── example_usage.py         runnable demo
 ├── policy.yaml              default policy
 └── pyproject.toml           package metadata + dependencies
