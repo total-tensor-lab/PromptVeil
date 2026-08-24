@@ -63,8 +63,9 @@ def _resolve_overlaps(entities: List[DetectedEntity]) -> List[DetectedEntity]:
     Remove overlapping matches, keeping the longer (more specific) one.
 
     Entities are sorted by start position; when two overlap, the one with the
-    greater span wins. This prevents, for example, a phone pattern from
-    matching a digit sequence that is already part of a credit card number.
+    greater span wins. Equal-length overlaps retain the earlier match. This
+    prevents, for example, a phone pattern from matching a digit sequence that
+    is already part of a credit card number.
 
     Args:
         entities: Unsorted list of detected entities.

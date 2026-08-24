@@ -283,7 +283,7 @@ pip install ".[dev]"
 
 ### Testing
 
-The project ships **206 pytest tests** across 12 test files with coverage for all core modules:
+The project ships **234 pytest tests** across 13 test files with coverage for all core modules:
 
 | Test File | Coverage Area |
 |---|---|
@@ -492,7 +492,7 @@ PromptVeil/
 │   └── middleware/
 │       ├── __init__.py
 │       └── fastapi_middleware.py    # PromptVeilMiddleware (optional FastAPI extra)
-├── tests/                          # 62 pytest tests
+├── tests/                          # 234 pytest tests
 │   ├── test_config.py
 │   ├── test_detector.py
 │   ├── test_india_detector.py

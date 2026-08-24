@@ -466,7 +466,7 @@ PromptVeil/
 │   ├── actions/             masker.py, blocker.py
 │   ├── logger/              structured JSON audit logger
 │   └── middleware/          FastAPI/Starlette middleware (optional)
-├── tests/                   206 pytest tests
+├── tests/                   234 pytest tests
 ├── example_usage.py         runnable demo
 ├── policy.yaml              default policy
 └── pyproject.toml           package metadata + dependencies
