@@ -33,9 +33,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/total-tensor-lab/PromptShield"
-Repository = "https://github.com/total-tensor-lab/PromptShield"
-Issues = "https://github.com/total-tensor-lab/PromptShield/issues"
+Homepage = "https://github.com/total-tensor-lab/PromptVeil"
+Repository = "https://github.com/total-tensor-lab/PromptVeil"
+Issues = "https://github.com/total-tensor-lab/PromptVeil/issues"
 
 [project.optional-dependencies]
 fastapi = [
