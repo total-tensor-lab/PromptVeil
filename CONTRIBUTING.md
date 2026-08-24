@@ -13,8 +13,8 @@ python -m pip install -e ".[dev]"
 Run the test suite and coverage locally:
 
 ```bash
-python -m pytest tests/ -q
-python -m pytest tests/ --cov=promptveil --cov-branch --cov-report=term-missing
+uv run --extra dev pytest tests/ -q
+uv run --extra dev pytest tests/ --cov=promptveil --cov-branch --cov-report=term-missing
 ```
 
 Keep changes focused, add regression tests for behavior changes, and do not

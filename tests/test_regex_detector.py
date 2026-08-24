@@ -193,9 +193,9 @@ class TestResolveOverlaps:
         ]
         result = _resolve_overlaps(entities)
         
-        # Should keep the longest one
+        # Equal-length overlaps retain the earliest match.
         assert len(result) == 1
-        assert result[0].value == "x@y.com"
+        assert result[0].value == "a@b.com"
 
     def test_sorted_by_start_position(self):
         """Test that result is sorted by start position."""

@@ -34,22 +34,22 @@ sensitive information (PII, secrets), applies configurable policies
 
 ```bash
 # Core (only requires PyYAML)
-pip install .
+pip install promptveil
 
 # With FastAPI middleware support
-pip install ".[fastapi]"
+pip install "promptveil[fastapi]"
 
 # With OpenAI adapter
-pip install ".[openai]"
+pip install "promptveil[openai]"
 
 # With LangChain adapter
-pip install ".[langchain]"
+pip install "promptveil[langchain]"
 
 # Everything
-pip install ".[fastapi,openai,langchain,dev]"
+pip install "promptveil[fastapi,openai,langchain,dev]"
 
 # Development (includes pytest)
-pip install ".[dev]"
+pip install "promptveil[dev]"
 ```
 
 Requires **Python ≥ 3.10**.
@@ -372,4 +372,3 @@ uv run pytest -v
 ```
 
 234 tests, < 1 s.
-
