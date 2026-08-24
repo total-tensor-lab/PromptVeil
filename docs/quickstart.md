@@ -32,8 +32,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### Clone and enter the project
 
 ```bash
-git clone https://github.com/total-tensor-lab/PromptShield.git
-cd PromptShield
+git clone https://github.com/total-tensor-lab/PromptVeil.git
+cd PromptVeil
 ```
 
 ### Create a virtual environment
