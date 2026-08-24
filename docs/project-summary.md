@@ -1,17 +1,17 @@
 ---
-title: PromptShield — Project Summary
+title: PromptVeil — Project Summary
 date: 2026-05-27
 version: 2.0
 audience: Engineering Team, Architects, Stakeholders
 ---
 
-# PromptShield — Project Summary
+# PromptVeil — Project Summary
 
 ## 1. Executive Summary
 
-PromptShield is a **Python middleware library** (v0.2.0) that intercepts prompts *before* they reach a Large Language Model (LLM) API, detects sensitive personally identifiable information (PII) and secrets, and applies configurable privacy policies (mask, block, or allow). It produces structured JSON audit logs for compliance without persisting raw sensitive values.
+PromptVeil is a **Python middleware library** (v0.1.0) that intercepts prompts *before* they reach a Large Language Model (LLM) API, detects sensitive personally identifiable information (PII) and secrets, and applies configurable privacy policies (mask, block, or allow). It produces structured JSON audit logs for compliance without persisting raw sensitive values.
 
-v0.2.0 adds five differentiating capabilities on top of the v0.1.0 core: **confidence-based policy thresholds** (per-rule minimum confidence); **rich scan results** with probabilistic risk scoring (`scan_detailed()`); **jurisdiction compliance profiles** (`india_dpdpa`, `eu_gdpr`, `us_hipaa`) loadable by a single YAML key; a **reversible pseudonymization vault** (`scan_with_vault()`) that replaces PII with stable `<TYPE_N>` tokens restorable after LLM response; and **framework-native adapters** for OpenAI (`wrap_openai`) and LangChain (`get_langchain_callback`). US-specific PII detection (SSN, US Passport, EIN) has been added via `USDetector`.
+The 0.1.0 release includes **confidence-based policy thresholds** (per-rule minimum confidence); **rich scan results** with probabilistic risk scoring (`scan_detailed()`); **jurisdiction compliance profiles** (`india_dpdpa`, `eu_gdpr`, `us_hipaa`) loadable by a single YAML key; a **reversible pseudonymization vault** (`scan_with_vault()`) that replaces PII with stable `<TYPE_N>` tokens restorable after LLM response; and **framework-native adapters** for OpenAI (`wrap_openai`) and LangChain (`get_langchain_callback`). US-specific PII detection (SSN, US Passport, EIN) has been added via `USDetector`.
 
 ---
 
@@ -19,14 +19,14 @@ v0.2.0 adds five differentiating capabilities on top of the v0.1.0 core: **confi
 
 ![High-Level Architecture](diagrams/high-level-architecture.drawio.png)
 
-PromptShield sits between the **caller application** and the **LLM API**. The caller invokes `Shield.scan(prompt)`, which runs the detection pipeline, evaluates results against a YAML-driven policy, applies masking or blocking, emits a structured JSON audit log to stdout, and returns the sanitised string. The optional `PromptShieldMiddleware` wraps FastAPI/Starlette applications to intercept POST request bodies transparently.
+PromptVeil sits between the **caller application** and the **LLM API**. The caller invokes `Shield.scan(prompt)`, which runs the detection pipeline, evaluates results against a YAML-driven policy, applies masking or blocking, emits a structured JSON audit log to stdout, and returns the sanitised string. The optional `PromptVeilMiddleware` wraps FastAPI/Starlette applications to intercept POST request bodies transparently.
 
 ### System Boundaries
 
 | Boundary | Description |
 |---|---|
 | **Caller Application** | Any Python app, FastAPI service, notebook, or CLI script that calls `Shield.scan()` |
-| **PromptShield** | Core library — detection, policy, actions, logging (this project) |
+| **PromptVeil** | Core library — detection, policy, actions, logging (this project) |
 | **LLM API** | Downstream target: OpenAI, Anthropic, Azure OpenAI, etc. (not part of this project) |
 | **policy.yaml** | YAML configuration file that drives the policy rules (supports `profile:` key) |
 | **Audit Log (stdout)** | Structured JSON lines emitted for each scan event; raw values never stored |
@@ -66,7 +66,7 @@ The sanitised string is returned to the caller, ready to forward to the LLM API.
 
 ### FastAPI Middleware Flow
 
-When `PromptShieldMiddleware` is configured, it wraps `dispatch()` around every POST request with `application/json` content. It decodes the body, extracts the configured `prompt_field`, calls `shield.scan()`, and either rewrites the request with the sanitised value (mask path) or returns a `400 Bad Request` JSON response immediately (block path). Non-JSON bodies and non-POST requests are forwarded untouched.
+When `PromptVeilMiddleware` is configured, it wraps `dispatch()` around every POST request with `application/json` content. It decodes the body, extracts the configured `prompt_field`, calls `shield.scan()`, and either rewrites the request with the sanitised value (mask path) or returns a `400 Bad Request` JSON response immediately (block path). Non-JSON bodies and non-POST requests are forwarded untouched.
 
 ---
 
@@ -108,12 +108,12 @@ When `PromptShieldMiddleware` is configured, it wraps `dispatch()` around every 
 | Class | File | Responsibility |
 |---|---|---|
 | `AuditLogger` | `logger/audit_logger.py` | Structured JSON lines to stdout; raw values never stored |
-| `PromptShieldMiddleware` | `middleware/fastapi_middleware.py` | Starlette `BaseHTTPMiddleware`; intercepts POST bodies, rewrites or blocks |
+| `PromptVeilMiddleware` | `middleware/fastapi_middleware.py` | Starlette `BaseHTTPMiddleware`; intercepts POST bodies, rewrites or blocks |
 | `Shield` | `shield.py` | Central orchestrator: wires detection → policy → actions → logging; exposes `scan`, `scan_detailed`, `scan_with_vault` |
 | `SensitiveDataError` | `exceptions.py` | Raised on block; carries `entity_type` for caller error handling |
 | `ConfigurationError` | `exceptions.py` | Raised on invalid `Shield` construction or bad YAML |
 
-### Results Layer (new in v0.2.0)
+### Results Layer (new in v0.1.0)
 
 | Class / Symbol | File | Responsibility |
 |---|---|---|
@@ -122,7 +122,7 @@ When `PromptShieldMiddleware` is configured, it wraps `dispatch()` around every 
 | `_compute_risk_score()` | `results.py` | Probabilistic union of per-entity weights; confidence and action both scale contribution |
 | `_risk_level()` | `results.py` | Thresholds: NONE=0.0, LOW<0.30, MEDIUM<0.60, HIGH<0.85, CRITICAL≥0.85 |
 
-### Profiles Layer (new in v0.2.0)
+### Profiles Layer (new in v0.1.0)
 
 | Symbol | File | Responsibility |
 |---|---|---|
@@ -133,7 +133,7 @@ When `PromptShieldMiddleware` is configured, it wraps `dispatch()` around every 
 | `eu_gdpr` | `profiles/eu_gdpr.py` | EU GDPR rules + `RegexDetector` |
 | `us_hipaa` | `profiles/us_hipaa.py` | US HIPAA rules + `RegexDetector` + `USDetector` |
 
-### Vault & Adapters (new in v0.2.0)
+### Vault & Adapters (new in v0.1.0)
 
 | Class / Symbol | File | Responsibility |
 |---|---|---|
@@ -165,7 +165,7 @@ Exactly one of `config_path` or `config` must be provided. When using `config_pa
 **Returns:** `str` — Sanitised string with sensitive values masked.  
 **Raises:** `SensitiveDataError` if a `block` rule fires; `TypeError` if `prompt` is not a string.
 
-### `Shield.scan_detailed(prompt)` *(new in v0.2.0)*
+### `Shield.scan_detailed(prompt)` *(new in v0.1.0)*
 
 Same pipeline as `scan()`, but returns a `ScanResult` instead of a plain string.
 
@@ -177,7 +177,7 @@ Same pipeline as `scan()`, but returns a `ScanResult` instead of a plain string.
 | `risk_level` | `str` | NONE / LOW / MEDIUM / HIGH / CRITICAL |
 | `was_mutated` | `bool` | `True` if any masking was applied |
 
-### `Shield.scan_with_vault(prompt, vault=None)` *(new in v0.2.0)*
+### `Shield.scan_with_vault(prompt, vault=None)` *(new in v0.1.0)*
 
 Replaces each masked entity with a stable `<TYPE_N>` token. Returns `(pseudonymized_str, vault)`.
 
@@ -283,7 +283,7 @@ pip install ".[dev]"
 
 ### Testing
 
-The project ships **206 pytest tests** across 12 test files with coverage for all core modules:
+The project ships **234 pytest tests** across 13 test files with coverage for all core modules:
 
 | Test File | Coverage Area |
 |---|---|
@@ -304,7 +304,7 @@ Run tests:
 ```bash
 uv run pytest -v
 # or with coverage:
-uv run pytest --cov=promptshield --cov-report=term-missing
+uv run pytest --cov=promptveil --cov-report=term-missing
 ```
 
 ---
@@ -313,11 +313,11 @@ uv run pytest --cov=promptshield --cov-report=term-missing
 
 ### Adding a Custom Detector
 
-1. Subclass `BaseDetector` from `promptshield.detector.base`:
+1. Subclass `BaseDetector` from `promptveil.detector.base`:
 
 ```python
 import re
-from promptshield.detector.base import BaseDetector, DetectedEntity
+from promptveil.detector.base import BaseDetector, DetectedEntity
 
 class SSNDetector(BaseDetector):
     _PATTERN = re.compile(r"\b\d{3}-\d{2}-\d{4}\b")
@@ -336,8 +336,8 @@ class SSNDetector(BaseDetector):
 2. Register the detector when constructing `Shield`:
 
 ```python
-from promptshield import Shield
-from promptshield.policy.models import Action, PolicyConfig, Rule
+from promptveil import Shield
+from promptveil.policy.models import Action, PolicyConfig, Rule
 
 shield = Shield(
     config=PolicyConfig(
@@ -356,18 +356,18 @@ shield.add_detector(SSNDetector())
 
 ### Adding a New Entity Type to `RegexDetector`
 
-1. Open `promptshield/detector/regex_detector.py`
+1. Open `promptveil/detector/regex_detector.py`
 2. Add a key and regex pattern list to `_RAW_PATTERNS`
 3. The pattern is compiled automatically at import time
-4. Add a corresponding masking function to `promptshield/actions/masker.py` and register it in the `_MASKERS` dispatch table
+4. Add a corresponding masking function to `promptveil/actions/masker.py` and register it in the `_MASKERS` dispatch table
 
 ### Enabling India PII Detection
 
 Instantiate `IndiaDetector` alongside `RegexDetector` and add rules for the India entity types:
 
 ```python
-from promptshield.detector.india_detector import IndiaDetector
-from promptshield.detector.regex_detector import RegexDetector
+from promptveil.detector.india_detector import IndiaDetector
+from promptveil.detector.regex_detector import RegexDetector
 
 shield = Shield(
     config_path="policy.yaml",
@@ -381,19 +381,19 @@ Uncomment and add rules in `policy.yaml` for any of: `in_aadhaar`, `in_pan`, `in
 
 ```python
 from fastapi import FastAPI
-from promptshield import Shield
-from promptshield.middleware import PromptShieldMiddleware
+from promptveil import Shield
+from promptveil.middleware import PromptVeilMiddleware
 
 app = FastAPI()
 shield = Shield(config_path="policy.yaml")
-app.add_middleware(PromptShieldMiddleware, shield=shield, prompt_field="prompt")
+app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field="prompt")
 ```
 
 `prompt_field` defaults to `"prompt"` — change it to match your request body schema.
 
 ### Custom Audit Logger
 
-Subclass or wrap `AuditLogger` from `promptshield.logger.audit_logger` and pass it as the `logger` parameter to `Shield`. The logger receives `log_scan_result()` and `log_blocked()` calls.
+Subclass or wrap `AuditLogger` from `promptveil.logger.audit_logger` and pass it as the `logger` parameter to `Shield`. The logger receives `log_scan_result()` and `log_blocked()` calls.
 
 ---
 
@@ -452,11 +452,11 @@ Subclass or wrap `AuditLogger` from `promptshield.logger.audit_logger` and pass 
 ## 10. Code Structure
 
 ```
-PromptShield/
-├── promptshield/                   # Main package
+PromptVeil/
+├── promptveil/                   # Main package
 │   ├── __init__.py                 # Public API: Shield, ScanResult, EntityResult, PseudonymVault, exceptions
 │   ├── shield.py                   # Shield — central orchestrator (scan, scan_detailed, scan_with_vault)
-│   ├── exceptions.py               # SensitiveDataError, ConfigurationError, PromptShieldError
+│   ├── exceptions.py               # SensitiveDataError, ConfigurationError, PromptVeilError
 │   ├── results.py                  # ScanResult, EntityResult, risk scoring
 │   ├── vault.py                    # PseudonymVault — thread-safe reversible pseudonymization
 │   ├── config/
@@ -491,8 +491,8 @@ PromptShield/
 │   │   └── audit_logger.py         # AuditLogger — structured JSON lines, no raw values
 │   └── middleware/
 │       ├── __init__.py
-│       └── fastapi_middleware.py    # PromptShieldMiddleware (optional FastAPI extra)
-├── tests/                          # 62 pytest tests
+│       └── fastapi_middleware.py    # PromptVeilMiddleware (optional FastAPI extra)
+├── tests/                          # 234 pytest tests
 │   ├── test_config.py
 │   ├── test_detector.py
 │   ├── test_india_detector.py

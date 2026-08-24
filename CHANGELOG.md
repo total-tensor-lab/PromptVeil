@@ -1,0 +1,22 @@
+# Changelog
+
+All notable changes to PromptVeil are documented here.
+
+## [0.1.0] - Unreleased
+
+### Added
+
+- Regex detection for emails, phone numbers, credit cards, and API keys.
+- Configurable `allow`, `mask`, and `block` policies loaded from YAML.
+- India, EU, and US compliance-oriented detector profiles.
+- Confidence-aware policies and detailed scan risk results.
+- Reversible pseudonymization with `PseudonymVault`.
+- OpenAI, LangChain, and FastAPI integrations as optional features.
+- Structured audit logging that excludes raw detected values.
+
+### Known limitations
+
+- Detectors are heuristic and cannot guarantee that all sensitive data is found.
+- Compliance profiles are configuration presets, not legal compliance certifications.
+- `PseudonymVault` is an in-process store and is not a durable or distributed vault.
+- Optional integrations must be tested against the SDK versions used by the host application.

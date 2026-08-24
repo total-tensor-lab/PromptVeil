@@ -2,9 +2,9 @@
 
 import pytest
 
-from promptshield import Shield
-from promptshield.exceptions import ConfigurationError, SensitiveDataError
-from promptshield.profiles import available_profiles, load_profile
+from promptveil import Shield
+from promptveil.exceptions import ConfigurationError, SensitiveDataError
+from promptveil.profiles import available_profiles, load_profile
 
 
 # ── Profile registry ──────────────────────────────────────────────────────

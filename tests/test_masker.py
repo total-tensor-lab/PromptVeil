@@ -2,8 +2,8 @@
 
 import pytest
 
-from promptshield.actions.masker import apply_masks, mask_value
-from promptshield.detector.base import DetectedEntity
+from promptveil.actions.masker import apply_masks, mask_value
+from promptveil.detector.base import DetectedEntity
 
 
 class TestMaskValue:
