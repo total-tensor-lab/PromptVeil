@@ -72,6 +72,7 @@ jobs:
     environment: pypi
     permissions:
       id-token: write
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -80,3 +81,8 @@ jobs:
       - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: "PromptVeil v${{ needs.build.outputs.version }}"
+          files: dist/*
+          generate_release_notes: true
