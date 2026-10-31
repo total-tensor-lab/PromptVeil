@@ -174,6 +174,11 @@ shield = Shield(config=profile.policy, detectors=profile.detectors)
 | `eu_gdpr` | `RegexDetector` | email/phone → MASK; credit card/API key → BLOCK |
 | `us_hipaa` | `RegexDetector` + `USDetector` | SSN → BLOCK; email/phone/passport/EIN → MASK |
 
+> **Disclaimer:** Profiles are starting-point policy presets, not legal advice
+> and not a certification of compliance with DPDPA, GDPR, HIPAA, or any other
+> regulation. Detection is heuristic and may miss sensitive data. You remain
+> responsible for your own compliance obligations.
+
 ---
 
 ## API Reference
