@@ -2,6 +2,17 @@
 
 All notable changes to PromptVeil are documented here.
 
+## [0.1.3] - 2026-10-31
+
+### Fixed
+
+- `Shield.scan`, `scan_detailed`, and `scan_with_vault` no longer corrupt the
+  output when two detectors report the same span (for example `phone` from the
+  regex detector and `in_phone` from the India detector). Overlaps are now
+  resolved among the spans being masked or pseudonymized, so
+  `PseudonymVault.restore` returns the original text. `block` rules are still
+  checked against every detected match.
+
 ## [0.1.2] - 2026-10-31
 
 ### Fixed
