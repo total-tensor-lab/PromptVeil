@@ -58,10 +58,11 @@ Requires **Python ≥ 3.10**.
 
 ## Documentation
 
-- [Quickstart](docs/quickstart.md)
-- [Changelog](CHANGELOG.md)
-- [Security policy](SECURITY.md)
-- [Contributing](CONTRIBUTING.md)
+- [Quickstart](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
+- [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
+- [Changelog](https://github.com/total-tensor-lab/PromptVeil/blob/master/CHANGELOG.md)
+- [Security policy](https://github.com/total-tensor-lab/PromptVeil/blob/master/SECURITY.md)
+- [Contributing](https://github.com/total-tensor-lab/PromptVeil/blob/master/CONTRIBUTING.md)
 
 ---
 
@@ -183,59 +184,8 @@ shield = Shield(config=profile.policy, detectors=profile.detectors)
 
 ## API Reference
 
-### `Shield(config_path=…, config=…, detectors=…, logger=…)`
-
-| Param | Type | Description |
-|---|---|---|
-| `config_path` | `str \| Path` | Path to a YAML policy file |
-| `config` | `PolicyConfig` | Pre-built config (alternative to `config_path`) |
-| `detectors` | `list[BaseDetector]` | Custom detector list; overrides profile detectors when provided |
-| `logger` | `AuditLogger` | Custom audit logger (default: JSON → stdout) |
-
-### `shield.scan(prompt: str) -> str`
-
-Scans the prompt, applies policy rules, and returns a sanitised string.
-Raises `SensitiveDataError` if a `block` rule fires.
-
-### `shield.scan_response(response: str) -> str`
-
-Same as `scan` but semantically applied to LLM output.
-
-### `shield.scan_detailed(prompt: str) -> ScanResult`
-
-Like `scan`, but returns a `ScanResult` dataclass instead of a plain string:
-
-```python
-@dataclass(frozen=True)
-class ScanResult:
-    safe_text: str                # sanitised prompt
-    entities: tuple[EntityResult] # per-entity detail
-    risk_score: float             # 0.0 – 1.0 probabilistic risk
-    risk_level: str               # NONE | LOW | MEDIUM | HIGH | CRITICAL
-    was_mutated: bool             # True if any masking was applied
-```
-
-`risk_level` thresholds: NONE = 0.0, LOW < 0.30, MEDIUM < 0.60, HIGH < 0.85, CRITICAL ≥ 0.85.
-
-### `shield.scan_with_vault(prompt: str, vault=None) -> tuple[str, PseudonymVault]`
-
-Replaces each masked/blocked entity with a reversible token (`<EMAIL_1>`, `<PHONE_1>`, …).
-Pass the returned `PseudonymVault` to `vault.restore(text)` to swap tokens back after the LLM response.
-
-### `shield.add_detector(detector: BaseDetector)`
-
-Register an additional detector at runtime.
-
-### `PseudonymVault`
-
-| Method | Description |
-|---|---|
-| `pseudonymize(text, entities)` | Replace entity spans with tokens (called internally by `scan_with_vault`) |
-| `restore(text)` | Swap all tokens back to their original values |
-| `get_token(value)` | Look up the token assigned to an original value |
-| `token_map` | Read-only copy of the current `{token: original_value}` mapping |
-| `clear()` | Reset the vault |
-| `len(vault)` | Number of unique originals stored |
+See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
+for the full public API.
 
 ---
 
@@ -315,13 +265,15 @@ from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()   # lazy-imported; requires langchain-core
 callback = CallbackClass(shield)
+callback.raise_error = True                # required for block rules to stop the call
 
-llm.invoke(prompt, config={"callbacks": [callback]})
+chat_model.invoke(prompt, config={"callbacks": [callback]})
 ```
 
-The callback implements `on_llm_start` (string prompts) and
-`on_chat_model_start` (chat messages), scanning and mutating content
-in-place before it reaches the model.
+> **Warning:** Without `raise_error = True`, LangChain swallows
+> `SensitiveDataError` and sends blocked prompts anyway. The callback also can't
+> mask string LLM prompts, so call `shield.scan(prompt)` yourself for those. See
+> the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md#get_langchain_callback).
 
 ---
 

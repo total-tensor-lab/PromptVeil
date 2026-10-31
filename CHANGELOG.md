@@ -2,6 +2,16 @@
 
 All notable changes to PromptVeil are documented here.
 
+## [Unreleased]
+
+### Documentation
+
+- Added a full API reference in `docs/api-reference.md`, replacing the README's
+  API section.
+- Corrected the LangChain adapter docs. Block rules are only enforced when the
+  callback has `raise_error = True`, and the callback can't mask string LLM
+  prompts.
+
 ## [0.1.3] - 2026-10-31
 
 ### Fixed
