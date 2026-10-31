@@ -2,9 +2,13 @@
 
 ## Reporting a vulnerability
 
-Please do not report security vulnerabilities in public issues. Contact the
-PromptVeil maintainers privately through the repository's security advisory
-mechanism or the maintainer contact listed in the project metadata.
+Please do not report security vulnerabilities in public issues. Report them
+privately through GitHub's private vulnerability reporting
+(<https://github.com/total-tensor-lab/PromptVeil/security/advisories/new>) or
+by email to <oss@totaltensorlab.com>.
+
+For general questions or support, contact <oss@totaltensorlab.com> or open a
+public issue.
 
 Include the affected version, a concise reproduction, impact, and any proposed
 mitigation. Do not include real personal data, credentials, API keys, or other
