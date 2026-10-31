@@ -8,7 +8,13 @@ from benchmarks.utils.recording import compact_results
 
 def test_compact_results_preserves_metrics_and_summary():
     payload = {
-        "machine_info": {"node": "private-host"},
+        "machine_info": {
+            "node": "private-host",
+            "system": "Linux",
+            "python_version": "3.13.9",
+            "release": "6.8.0",
+            "cpu": {"brand_raw": "Test CPU", "count": 8, "flags": ["avx"]},
+        },
         "commit_info": {"id": "revision"},
         "datetime": "2026-10-31T00:00:00+00:00",
         "benchmarks": [
@@ -31,7 +37,11 @@ def test_compact_results_preserves_metrics_and_summary():
 
     compact_results(payload)
 
-    assert "machine_info" not in payload
+    assert payload["machine_info"] == {
+        "system": "Linux",
+        "python_version": "3.13.9",
+        "cpu": {"brand_raw": "Test CPU", "count": 8},
+    }
     assert "commit_info" not in payload
     entry = payload["benchmarks"][0]
     assert "params" not in entry

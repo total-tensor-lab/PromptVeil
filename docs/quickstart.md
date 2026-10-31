@@ -186,8 +186,10 @@ This writes a timestamped JSON report to `benchmarks/results/` and prints a
 terminal summary table with mean latency, percentile latency, throughput, and
 peak memory where available.
 The JSON keeps aggregate statistics, P50/P95/P99, workload parameter IDs, and
-workload/memory metadata. Raw timing samples, full test inputs, machine details,
-and Git commit information are omitted to keep reports small and easy to share.
+workload/memory metadata, plus minimal machine info (OS, architecture, Python
+version, CPU model and core count) so results can be compared across machines.
+Raw timing samples, full test inputs, hostname, and Git commit information are
+omitted to keep reports small and easy to share.
 
 ### Pass through extra pytest arguments
 
