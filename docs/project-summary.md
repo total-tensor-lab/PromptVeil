@@ -47,7 +47,7 @@ PromptVeil sits between the **caller application** and the **LLM API**. The call
 `Shield.scan()` receives a `prompt: str`. If the argument is not a string, a `TypeError` is raised immediately before any processing begins.
 
 **Step 2 — Entity Detection**
-All registered `BaseDetector` instances are run against the prompt in sequence. Each detector returns a `List[DetectedEntity]`. Each entity now carries a `confidence: float` (default `1.0`) representing detection certainty. Entities from all detectors are collected, then `_resolve_overlaps()` deduplicates them by keeping the longest non-overlapping span at each position. If no entities are found, the original prompt is returned unchanged.
+All registered `BaseDetector` instances are run against the prompt in sequence. Each detector returns a `List[DetectedEntity]`. Each entity now carries a `confidence: float` (default `1.0`) representing detection certainty. Each detector removes overlaps within its own matches, and `Shield` collects the matches from all detectors without merging them, so a span found by two detectors (for example `phone` and `in_phone`) is still evaluated under both rules. Overlaps across detectors are resolved later, in Step 5. If no entities are found, the original prompt is returned unchanged.
 
 **Step 3 — Policy Evaluation**
 `PolicyEngine.evaluate(entities)` maps each detected entity to an `Action` (`MASK`, `BLOCK`, or `ALLOW`) by looking up the entity type in the rule map. If the entity's `confidence` is below the rule's `min_confidence` threshold, the rule is skipped and `default_action` applies. The result is a `Dict[DetectedEntity, Action]`.
@@ -56,7 +56,7 @@ All registered `BaseDetector` instances are run against the prompt in sequence. 
 Before any masking occurs, the engine iterates through evaluated entities and checks for any `BLOCK` actions. The first `BLOCK` entity triggers `AuditLogger.log_blocked()` (records entity type, no raw value) and then `block()` raises a `SensitiveDataError` immediately. The prompt is never forwarded to the LLM.
 
 **Step 5 — Apply Masking**
-Entities resolved to `MASK` are collected. `apply_masks(prompt, to_mask)` rebuilds the string by replacing each sensitive span with a type-aware redacted value from `mask_value()`. Replacements are applied right-to-left by position so earlier offsets remain valid.
+Entities resolved to `MASK` are collected, and `Shield._select_masks()` drops overlapping spans among them (the longest span wins; the first-registered detector wins ties) so no text is replaced twice. `apply_masks(prompt, to_mask)` rebuilds the string by replacing each sensitive span with a type-aware redacted value from `mask_value()`. Replacements are applied right-to-left by position so earlier offsets remain valid.
 
 **Step 6 — Audit Logging**
 `AuditLogger.log_scan_result()` writes a JSON line to stdout recording the event: timestamp, prompt length, number of detections, entity types, actions applied, and masked previews. Raw values are never logged.
@@ -406,7 +406,7 @@ Subclass or wrap `AuditLogger` from `promptveil.logger.audit_logger` and pass it
 | Always provide either `config_path` or `config` — never both | The `Shield` constructor enforces mutual exclusivity |
 | Catch `SensitiveDataError` at the call site | Block events raise and do not return; unhandled errors will propagate to the user |
 | Use `scan_response()` for LLM output as well as input | LLMs can reproduce or hallucinate PII from training data |
-| List detectors in priority order | `_resolve_overlaps()` keeps the longest span; order affects which pattern wins on ties |
+| List detectors in priority order | When detectors report the same span, the longest span is masked and the first-registered detector wins ties; `block` rules are still checked against every match |
 | Keep `policy.yaml` under version control | Policy changes are security-relevant; treat them like code |
 | Use structured audit log fields (`entity_type`, `action`) for alerting | Never parse free-text log lines for security events |
 
