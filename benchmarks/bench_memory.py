@@ -62,4 +62,5 @@ def test_vault_growth_memory(benchmark, entity_count: int) -> None:
         retained_memory_bytes=memory.retained_bytes,
         bytes_per_entity=(memory.retained_bytes / len(vault)) if len(vault) else 0.0,
     )
-    assert len(vault) == entity_count
+    # The vault stores one token per distinct (type, value), and the entity pool repeats.
+    assert len(vault) == len({(entity.entity_type, entity.value) for entity in entities})
