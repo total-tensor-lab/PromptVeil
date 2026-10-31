@@ -145,3 +145,60 @@ class TestYamlConfig:
         shield = Shield(config_path="policy.yaml")
         with pytest.raises(SensitiveDataError):
             shield.scan("key sk-abcdefABCDEF12345678901234")
+
+
+# ── Overlapping detections from multiple detectors ────────────────────────
+
+class TestOverlappingDetectors:
+    """Two detectors reporting the same span must not corrupt the output."""
+
+    TEXT = "call +91 98765 43210 now"
+
+    @staticmethod
+    def make_multi_detector_shield() -> Shield:
+        from promptveil.detector.india_detector import IndiaDetector
+        from promptveil.detector.regex_detector import RegexDetector
+
+        config = PolicyConfig(
+            rules=[
+                Rule(type="phone", action=Action.MASK),
+                Rule(type="in_phone", action=Action.MASK),
+            ],
+            default_action=Action.ALLOW,
+        )
+        return Shield(config=config, detectors=[RegexDetector(), IndiaDetector()])
+
+    def test_scan_with_vault_round_trips(self):
+        shield = self.make_multi_detector_shield()
+        pseudonymized, vault = shield.scan_with_vault(self.TEXT)
+        assert "98765" not in pseudonymized
+        assert vault.restore(pseudonymized) == self.TEXT
+
+    def test_scan_masks_span_once(self):
+        shield = self.make_multi_detector_shield()
+        masked = shield.scan(self.TEXT)
+        assert "98765" not in masked
+        assert masked.startswith("call ") and masked.endswith(" now")
+
+    def test_scan_detailed_reports_span_once(self):
+        shield = self.make_multi_detector_shield()
+        result = shield.scan_detailed(self.TEXT)
+        assert len(result.entities) == 1
+
+    def test_block_rule_still_applies_to_overlapped_span(self):
+        from promptveil.detector.india_detector import IndiaDetector
+        from promptveil.detector.regex_detector import RegexDetector
+
+        config = PolicyConfig(
+            rules=[
+                Rule(type="phone", action=Action.MASK),
+                Rule(type="in_phone", action=Action.BLOCK),
+            ],
+            default_action=Action.ALLOW,
+        )
+        # RegexDetector is first, so phone wins the overlap; in_phone must still block.
+        shield = Shield(config=config, detectors=[RegexDetector(), IndiaDetector()])
+        with pytest.raises(SensitiveDataError):
+            shield.scan(self.TEXT)
+        with pytest.raises(SensitiveDataError):
+            shield.scan_with_vault(self.TEXT)

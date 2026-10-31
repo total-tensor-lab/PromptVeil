@@ -16,7 +16,7 @@ from .actions.blocker import block
 from .actions.masker import apply_masks, mask_value
 from .config.loader import load_config_with_profile
 from .detector.base import BaseDetector, DetectedEntity
-from .detector.regex_detector import RegexDetector
+from .detector.regex_detector import RegexDetector, _resolve_overlaps
 from .exceptions import ConfigurationError, SensitiveDataError
 from .logger.audit_logger import AuditLogger
 from .policy.engine import PolicyEngine
@@ -146,9 +146,7 @@ class Shield:
             )
 
         # --- 1. Detect --------------------------------------------------
-        all_entities: List[DetectedEntity] = []
-        for detector in self._detectors:
-            all_entities.extend(detector.detect(prompt))
+        all_entities = self._detect(prompt)
 
         if not all_entities:
             return prompt
@@ -163,7 +161,7 @@ class Shield:
                 block(entity)  # always raises SensitiveDataError
 
         # --- 4 & 5. Collect masks / allows --------------------------------
-        to_mask = [e for e, a in evaluated.items() if a == Action.MASK]
+        to_mask = self._select_masks(evaluated)
 
         # --- 6. Audit log -------------------------------------------------
         if to_mask:
@@ -196,6 +194,26 @@ class Shield:
             SensitiveDataError: Same conditions as :meth:`scan`.
         """
         return self.scan(response)
+
+    def _detect(self, prompt: str) -> List[DetectedEntity]:
+        """Run every detector and return all matches, overlapping or not."""
+        entities: List[DetectedEntity] = []
+        for detector in self._detectors:
+            entities.extend(detector.detect(prompt))
+        return entities
+
+    @staticmethod
+    def _select_masks(evaluated: Dict[DetectedEntity, Action]) -> List[DetectedEntity]:
+        """
+        Pick the non-overlapping entities to mask.
+
+        Two detectors can report the same span (e.g. ``phone`` and
+        ``in_phone``). Block rules are checked against every match before this
+        runs, so deduplicating here cannot skip a block. Replacing both spans
+        would corrupt the surrounding text, so the longer span wins; on a tie
+        the detector registered first wins.
+        """
+        return _resolve_overlaps([e for e, a in evaluated.items() if a == Action.MASK])
 
     def add_detector(self, detector: BaseDetector) -> None:
         """
@@ -239,9 +257,7 @@ class Shield:
             )
 
         # 1. Detect
-        all_entities: List[DetectedEntity] = []
-        for detector in self._detectors:
-            all_entities.extend(detector.detect(prompt))
+        all_entities = self._detect(prompt)
 
         if not all_entities:
             return ScanResult(
@@ -262,13 +278,16 @@ class Shield:
                 block(entity)
 
         # 4. Build per-entity results and collect masks
-        to_mask: List[DetectedEntity] = []
         entity_results: List[EntityResult] = []
+
+        to_mask = self._select_masks(evaluated)
+        masked = set(to_mask)
 
         for entity, action in evaluated.items():
             if action == Action.MASK:
+                if entity not in masked:
+                    continue  # overlapped by a longer or earlier span
                 mv = mask_value(entity.value, entity.entity_type)
-                to_mask.append(entity)
                 entity_results.append(
                     EntityResult(
                         entity_type=entity.entity_type,
@@ -361,9 +380,7 @@ class Shield:
             vault = PseudonymVault()
 
         # 1. Detect
-        all_entities: List[DetectedEntity] = []
-        for detector in self._detectors:
-            all_entities.extend(detector.detect(prompt))
+        all_entities = self._detect(prompt)
 
         if not all_entities:
             return prompt, vault
@@ -378,7 +395,7 @@ class Shield:
                 block(entity)
 
         # 4. Pseudonymize entities that would be masked
-        to_pseudonymize = [e for e, a in evaluated.items() if a == Action.MASK]
+        to_pseudonymize = self._select_masks(evaluated)
 
         if not to_pseudonymize:
             return prompt, vault
