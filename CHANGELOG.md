@@ -2,6 +2,16 @@
 
 All notable changes to PromptVeil are documented here.
 
+## [0.1.2] - 2026-10-31
+
+### Fixed
+
+- Publish workflow's TestPyPI smoke test now resolves dependencies with
+  `--index-strategy unsafe-best-match`. Previously, once `promptveil` existed
+  on PyPI, the installer's dependency-confusion protection pinned all version
+  lookups to PyPI and refused to see the just-published version on TestPyPI,
+  blocking every release after 0.1.0 from reaching PyPI.
+
 ## [0.1.0] - 2026-08-24
 
 ### Added
