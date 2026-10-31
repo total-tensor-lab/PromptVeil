@@ -23,6 +23,13 @@ All notable changes to PromptVeil are documented here.
   lookups to PyPI and refused to see the just-published version on TestPyPI,
   blocking every release after 0.1.0 from reaching PyPI.
 
+## [0.1.1] - 2026-09-19
+
+### Changed
+
+- Bumped the package and runtime version from `0.1.0` to `0.1.1`. This version
+  was tagged and published to TestPyPI only; it was never published to PyPI.
+
 ## [0.1.0] - 2026-08-24
 
 ### Added
