@@ -1,5 +1,7 @@
 # PromptVeil
 
+[![PyPI](https://img.shields.io/pypi/v/promptveil)](https://pypi.org/project/promptveil/)
+
 > Privacy and safety middleware for LLM applications.
 
 PromptVeil intercepts prompts **before** they reach an LLM API, detects
