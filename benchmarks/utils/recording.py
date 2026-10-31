@@ -47,9 +47,23 @@ def percentile(values: Iterable[float], percent: float) -> float | None:
     return samples[lower] + (samples[upper] - samples[lower]) * weight
 
 
+_MACHINE_KEYS = ("system", "machine", "python_implementation", "python_version")
+
+
+def minimal_machine_info(machine_info: dict[str, Any]) -> dict[str, Any]:
+    """Keep only what is needed to compare results across machines (no hostname)."""
+    minimal = {key: machine_info[key] for key in _MACHINE_KEYS if key in machine_info}
+    cpu = machine_info.get("cpu") or {}
+    for key in ("brand_raw", "count"):
+        if key in cpu:
+            minimal.setdefault("cpu", {})[key] = cpu[key]
+    return minimal
+
+
 def compact_results(payload: dict[str, Any]) -> None:
     """Keep aggregate metrics and workload labels without raw inputs or host metadata."""
-    payload.pop("machine_info", None)
+    if "machine_info" in payload:
+        payload["machine_info"] = minimal_machine_info(payload["machine_info"])
     payload.pop("commit_info", None)
     for entry in payload.get("benchmarks", []):
         # Parameter IDs and extra_info already describe the workload. Params can

@@ -17,12 +17,8 @@ from benchmarks.utils.recording import compact_results
 
 
 @pytest.hookimpl(optionalhook=True)
-def pytest_benchmark_generate_machine_info():
-    return {}
-
-
-@pytest.hookimpl(optionalhook=True)
 def pytest_benchmark_generate_commit_info():
+    # Return {} (not None) so pytest-benchmark skips running git.
     return {}
 
 
