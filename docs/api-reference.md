@@ -1,6 +1,6 @@
 # PromptVeil — API Reference
 
-Reference for the public API of PromptVeil 0.1.3. For setup and walkthroughs,
+Reference for the public API of PromptVeil 0.1.4. For setup and walkthroughs,
 see the [Quickstart](quickstart.md).
 
 PromptVeil is alpha software, so this API may change between releases. Anything

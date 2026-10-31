@@ -2,7 +2,7 @@
 
 All notable changes to PromptVeil are documented here.
 
-## [Unreleased]
+## [0.1.4] - 2026-11-01
 
 ### Security
 
