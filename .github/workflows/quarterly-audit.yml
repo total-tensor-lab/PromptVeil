@@ -1,0 +1,59 @@
+name: Quarterly audit
+
+on:
+  schedule:
+    # 09:00 UTC on the first day of January, April, July, and October.
+    - cron: "0 9 1 1,4,7,10 *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  open-audit-issue:
+    name: Open audit checklist issue
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Create audit issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          month=$(date -u +%Y-%m)
+          title="Quarterly maintenance audit ${month}"
+          existing=$(gh issue list --state all --search "\"${title}\" in:title" --json title --jq '.[].title' | grep -Fx "${title}" || true)
+          if [ -n "${existing}" ]; then
+            echo "Issue already exists: ${title}"
+            exit 0
+          fi
+          cat > body.md <<'BODY'
+          Quarterly maintenance checklist. Tick each item and close the issue when done.
+
+          ## Security and dependencies
+          - [ ] Triage open Dependabot, secret-scanning, and CodeQL alerts.
+          - [ ] Review and merge or close open Dependabot PRs.
+          - [ ] Test the private vulnerability-reporting flow end to end.
+          - [ ] Confirm `SECURITY.md` contacts still work (`oss@totaltensorlab.com`).
+
+          ## Community
+          - [ ] Review open issues and pull requests; respond or close stale ones.
+          - [ ] Label suitable issues `good first issue` or `help wanted`.
+
+          ## Compatibility
+          - [ ] Check newly released OpenAI, LangChain, FastAPI, and Starlette versions against the optional extras.
+          - [ ] Confirm supported Python versions in `pyproject.toml` match the CI matrix; consider newly released Python versions.
+
+          ## Access and configuration audit
+          - [ ] Review repository and organization members and their roles.
+          - [ ] Review PyPI and TestPyPI project owners and maintainers.
+          - [ ] Review ruleset bypass roles (`default-branch-protection`, `release-tag-protection`).
+          - [ ] Review Actions secrets, `pypi` and `testpypi` environments, and Trusted Publisher configuration.
+          - [ ] Confirm the allowed-actions list and SHA pinning are still enforced.
+
+          ## Messaging
+          - [ ] Confirm compliance wording is still narrow and the README disclaimer is intact: profiles are not legal certification.
+          BODY
+          sed -i 's/^          //' body.md
+          gh issue create --title "${title}" --body-file body.md
