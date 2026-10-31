@@ -56,6 +56,13 @@ pip install "promptveil[dev]"
 
 Requires **Python ≥ 3.10**.
 
+## Documentation
+
+- [Quickstart](docs/quickstart.md)
+- [Changelog](CHANGELOG.md)
+- [Security policy](SECURITY.md)
+- [Contributing](CONTRIBUTING.md)
+
 ---
 
 ## Quick Start
