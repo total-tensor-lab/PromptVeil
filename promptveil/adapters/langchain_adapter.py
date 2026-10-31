@@ -25,6 +25,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Dict, List, Type
 
+from ..exceptions import SensitiveDataError
+
 if TYPE_CHECKING:
     from ..shield import Shield
 
@@ -58,6 +60,10 @@ def get_langchain_callback() -> Type:
             shield: A configured :class:`~promptveil.shield.Shield` instance.
         """
 
+        # LangChain logs and swallows handler errors unless this is set, which
+        # would send blocked prompts to the model.
+        raise_error = True
+
         def __init__(self, shield: "Shield") -> None:
             super().__init__()
             self._shield = shield
@@ -70,9 +76,29 @@ def get_langchain_callback() -> Type:
             prompts: List[str],
             **kwargs: Any,
         ) -> None:
-            """Scan each prompt string in-place before the LLM sees it."""
-            for i, prompt in enumerate(prompts):
-                prompts[i] = self._shield.scan(prompt)
+            """
+            Scan each prompt, rejecting any that would need masking.
+
+            LangChain passes this handler a copy of each prompt, so a masked
+            version can't reach the model. Sending the original would leak the
+            value, so the call is stopped instead.
+
+            Raises:
+                SensitiveDataError: If a prompt matches a ``block`` rule or
+                    contains an entity that would be masked.
+            """
+            for prompt in prompts:
+                result = self._shield.scan_detailed(prompt)
+                if result.was_mutated:
+                    entity_type = next(
+                        e.entity_type for e in result.entities if e.action == "mask"
+                    )
+                    raise SensitiveDataError(
+                        f"Sensitive data of type '{entity_type}' was detected, "
+                        "but callbacks can't mask string LLM prompts. Call "
+                        "Shield.scan() on the prompt before invoking the LLM.",
+                        entity_type=entity_type,
+                    )
 
         # ── Chat models (message objects) ──────────────────────────────
 

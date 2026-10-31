@@ -139,6 +139,27 @@ class TestWrapOpenAI:
 
 # ── LangChain adapter ─────────────────────────────────────────────────────
 
+@pytest.fixture
+def fake_langchain(monkeypatch):
+    """Install a minimal langchain_core.callbacks for the duration of a test."""
+    import sys
+    import types
+
+    fake_lc = types.ModuleType("langchain_core")
+    fake_cb = types.ModuleType("langchain_core.callbacks")
+
+    class BaseCallbackHandler:
+        raise_error = False
+
+        def __init__(self):
+            pass
+
+    fake_cb.BaseCallbackHandler = BaseCallbackHandler
+    fake_lc.callbacks = fake_cb
+    monkeypatch.setitem(sys.modules, "langchain_core", fake_lc)
+    monkeypatch.setitem(sys.modules, "langchain_core.callbacks", fake_cb)
+
+
 class TestGetLangchainCallback:
     def test_raises_import_error_without_langchain(self, monkeypatch):
         import builtins
@@ -153,88 +174,45 @@ class TestGetLangchainCallback:
         with pytest.raises(ImportError, match="langchain-core"):
             get_langchain_callback()
 
-    def test_returns_class_when_langchain_available(self, monkeypatch):
+    def test_returns_class_when_langchain_available(self, fake_langchain):
         """If langchain_core is importable, returns a class."""
-        import sys
-        import types
+        cls = get_langchain_callback()
+        assert callable(cls)
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        instance = cls(shield)
+        assert hasattr(instance, "on_llm_start")
+        assert hasattr(instance, "on_chat_model_start")
 
-        # Build minimal fake langchain_core.callbacks
-        fake_lc = types.ModuleType("langchain_core")
-        fake_cb = types.ModuleType("langchain_core.callbacks")
+    def test_errors_propagate_through_langchain(self, fake_langchain):
+        assert get_langchain_callback().raise_error is True
 
-        class BaseCallbackHandler:
-            def __init__(self):
-                pass
+    def test_on_llm_start_rejects_prompt_needing_masking(self, fake_langchain):
+        cls = get_langchain_callback()
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        with pytest.raises(SensitiveDataError, match="Shield.scan") as exc_info:
+            cls(shield).on_llm_start({}, ["Contact alice@example.com now."])
+        assert exc_info.value.entity_type == "email"
 
-        fake_cb.BaseCallbackHandler = BaseCallbackHandler
-        fake_lc.callbacks = fake_cb
-        sys.modules["langchain_core"] = fake_lc
-        sys.modules["langchain_core.callbacks"] = fake_cb
+    def test_on_llm_start_raises_on_block(self, fake_langchain):
+        cls = get_langchain_callback()
+        shield = make_shield(rules=[Rule(type="email", action=Action.BLOCK)])
+        with pytest.raises(SensitiveDataError):
+            cls(shield).on_llm_start({}, ["Contact alice@example.com now."])
 
-        try:
-            cls = get_langchain_callback()
-            assert callable(cls)
-            shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
-            instance = cls(shield)
-            assert hasattr(instance, "on_llm_start")
-            assert hasattr(instance, "on_chat_model_start")
-        finally:
-            del sys.modules["langchain_core"]
-            del sys.modules["langchain_core.callbacks"]
+    def test_on_llm_start_passes_clean_and_allowed_prompts(self, fake_langchain):
+        cls = get_langchain_callback()
+        shield = make_shield(rules=[Rule(type="email", action=Action.ALLOW)])
+        cls(shield).on_llm_start({}, ["Hello", "Contact alice@example.com now."])
 
-    def test_on_llm_start_scans_prompts(self, monkeypatch):
-        import sys, types
+    def test_on_chat_model_start_scans_messages(self, fake_langchain):
+        cls = get_langchain_callback()
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        handler = cls(shield)
 
-        fake_lc = types.ModuleType("langchain_core")
-        fake_cb = types.ModuleType("langchain_core.callbacks")
+        class FakeMsg:
+            def __init__(self, content):
+                self.content = content
 
-        class BaseCallbackHandler:
-            def __init__(self):
-                pass
-
-        fake_cb.BaseCallbackHandler = BaseCallbackHandler
-        fake_lc.callbacks = fake_cb
-        sys.modules["langchain_core"] = fake_lc
-        sys.modules["langchain_core.callbacks"] = fake_cb
-
-        try:
-            cls = get_langchain_callback()
-            shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
-            handler = cls(shield)
-            prompts = ["Contact alice@example.com now."]
-            handler.on_llm_start({}, prompts)
-            assert "alice@example.com" not in prompts[0]
-        finally:
-            del sys.modules["langchain_core"]
-            del sys.modules["langchain_core.callbacks"]
-
-    def test_on_chat_model_start_scans_messages(self, monkeypatch):
-        import sys, types
-
-        fake_lc = types.ModuleType("langchain_core")
-        fake_cb = types.ModuleType("langchain_core.callbacks")
-
-        class BaseCallbackHandler:
-            def __init__(self):
-                pass
-
-        fake_cb.BaseCallbackHandler = BaseCallbackHandler
-        fake_lc.callbacks = fake_cb
-        sys.modules["langchain_core"] = fake_lc
-        sys.modules["langchain_core.callbacks"] = fake_cb
-
-        try:
-            cls = get_langchain_callback()
-            shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
-            handler = cls(shield)
-
-            class FakeMsg:
-                def __init__(self, content):
-                    self.content = content
-
-            messages = [[FakeMsg("Contact alice@example.com")]]
-            handler.on_chat_model_start({}, messages)
-            assert "alice@example.com" not in messages[0][0].content
-        finally:
-            del sys.modules["langchain_core"]
-            del sys.modules["langchain_core.callbacks"]
+        messages = [[FakeMsg("Contact alice@example.com")]]
+        handler.on_chat_model_start({}, messages)
+        assert "alice@example.com" not in messages[0][0].content

@@ -4,13 +4,22 @@ All notable changes to PromptVeil are documented here.
 
 ## [Unreleased]
 
+### Security
+
+- The LangChain callback now enforces `block` rules. Previously LangChain
+  swallowed `SensitiveDataError` and sent blocked prompts to the model.
+
+### Changed
+
+- The LangChain callback now raises `SensitiveDataError` when a string LLM prompt
+  contains an entity that would be masked. Previously these prompts were sent
+  unmasked, because a callback can't change them. Call `Shield.scan()` before
+  invoking the LLM to send a masked prompt.
+
 ### Documentation
 
 - Added a full API reference in `docs/api-reference.md`, replacing the README's
   API section.
-- Corrected the LangChain adapter docs. Block rules are only enforced when the
-  callback has `raise_error = True`, and the callback can't mask string LLM
-  prompts.
 
 ## [0.1.3] - 2026-10-31
 
