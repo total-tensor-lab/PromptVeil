@@ -34,9 +34,9 @@ def _percentiles(stats: dict[str, Any]) -> tuple[float | None, float | None, flo
             percentile(data, 99),
         )
     return (
-        stats.get("median"),
-        None,
-        None,
+        stats.get("p50", stats.get("median")),
+        stats.get("p95"),
+        stats.get("p99"),
     )
 
 
@@ -114,7 +114,6 @@ def main(argv: list[str] | None = None) -> int:
         "benchmark_suite",
         "--benchmark-json",
         str(output_path),
-        "--benchmark-save-data",
         "--benchmark-sort",
         "name",
         "--benchmark-min-rounds",

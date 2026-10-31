@@ -47,6 +47,21 @@ def percentile(values: Iterable[float], percent: float) -> float | None:
     return samples[lower] + (samples[upper] - samples[lower]) * weight
 
 
+def compact_results(payload: dict[str, Any]) -> None:
+    """Keep aggregate metrics and workload labels without raw inputs or host metadata."""
+    payload.pop("machine_info", None)
+    payload.pop("commit_info", None)
+    for entry in payload.get("benchmarks", []):
+        # Parameter IDs and extra_info already describe the workload. Params can
+        # contain entire corpora and entity lists, serialized as enormous reprs.
+        entry.pop("params", None)
+        stats = entry.get("stats", {})
+        samples = stats.pop("data", None)
+        if samples:
+            for percent in (50, 95, 99):
+                stats[f"p{percent}"] = percentile(samples, percent)
+
+
 def format_seconds(value: float | None) -> str:
     if value is None:
         return "-"

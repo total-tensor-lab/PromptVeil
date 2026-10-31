@@ -13,6 +13,22 @@ from promptveil.detector.us_detector import USDetector
 from promptveil.policy.models import Action, PolicyConfig, Rule
 
 from benchmarks.fixtures.corpus import ALL_POLICY_TYPES
+from benchmarks.utils.recording import compact_results
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_benchmark_generate_machine_info():
+    return {}
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_benchmark_generate_commit_info():
+    return {}
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_benchmark_update_json(output_json):
+    compact_results(output_json)
 
 
 class NullAuditLogger:
