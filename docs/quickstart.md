@@ -1,7 +1,8 @@
 # PromptVeil — Quickstart Guide
 
 This guide walks you through setting up a local development environment,
-running the test suite, and using PromptVeil in your own code.
+running the test suite, and using PromptVeil in your own code. For full details
+on each class and function, see the [API reference](api-reference.md).
 
 ---
 
@@ -391,14 +392,16 @@ from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()
 callback = CallbackClass(shield)
+callback.raise_error = True  # required for block rules to stop the call
 
-# Pass as a callback to any LangChain chain or LLM:
-llm.invoke(prompt, config={"callbacks": [callback]})
+# Pass as a callback to a chat model:
+chat_model.invoke(prompt, config={"callbacks": [callback]})
 ```
 
-The callback implements both `on_llm_start` (string prompts) and
-`on_chat_model_start` (chat message lists), mutating content in-place
-before the model receives it.
+> **Warning:** Without `raise_error = True`, LangChain swallows
+> `SensitiveDataError` and sends blocked prompts anyway. The callback also can't
+> mask string LLM prompts, so call `shield.scan(prompt)` yourself for those. See
+> the [API reference](api-reference.md#get_langchain_callback).
 
 ---
 
