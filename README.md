@@ -265,15 +265,14 @@ from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()   # lazy-imported; requires langchain-core
 callback = CallbackClass(shield)
-callback.raise_error = True                # required for block rules to stop the call
 
 chat_model.invoke(prompt, config={"callbacks": [callback]})
 ```
 
-> **Warning:** Without `raise_error = True`, LangChain swallows
-> `SensitiveDataError` and sends blocked prompts anyway. The callback also can't
-> mask string LLM prompts, so call `shield.scan(prompt)` yourself for those. See
-> the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md#get_langchain_callback).
+Chat messages are masked in place, and `block` rules raise `SensitiveDataError`.
+String LLM prompts can't be masked by a callback, so they raise
+`SensitiveDataError` too. Call `shield.scan(prompt)` first to send a masked
+prompt. See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md#get_langchain_callback).
 
 ---
 

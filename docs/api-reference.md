@@ -521,35 +521,35 @@ Requires `pip install "promptveil[langchain]"`. Raises `ImportError` otherwise.
 
 Returns a callback handler class. Create it with `CallbackClass(shield)`.
 
-> **Warning:** With default settings this callback doesn't stop blocked prompts,
-> and it doesn't mask string prompts. LangChain catches callback errors and logs
-> them, so the `SensitiveDataError` never reaches your code and the prompt is
-> still sent. It also passes callbacks a copy of string prompts, so the masked
-> text is discarded.
+| Model type | `mask` | `block` |
+|---|---|---|
+| Chat models | Message content is masked in place | Raises `SensitiveDataError` |
+| String LLMs | Raises `SensitiveDataError` | Raises `SensitiveDataError` |
 
-Behavior tested against `langchain-core` 1.7.3:
+In every `SensitiveDataError` case, the prompt isn't sent.
 
-| Model type | `mask` | `block` (default) | `block` with `raise_error = True` |
-|---|---|---|---|
-| Chat models | Applied | **Not enforced, prompt is sent** | Enforced |
-| String LLMs | **Not applied, prompt is sent unmasked** | **Not enforced, prompt is sent** | Enforced |
-
-Set `raise_error` so that blocks are enforced. For string LLMs, also scan the
-prompt yourself:
+String LLMs raise on `mask` because a callback can't change the prompt LangChain
+sends, so the only safe option is to stop the call. To send a masked prompt, scan
+it first. The callback then lets it through:
 
 ```python
 from promptveil.adapters import get_langchain_callback
 
 CallbackClass = get_langchain_callback()
 callback = CallbackClass(shield)
-callback.raise_error = True
 
 # Chat models
 chat_model.invoke(prompt, config={"callbacks": [callback]})
 
 # String LLMs
-llm.invoke(shield.scan(prompt))
+llm.invoke(shield.scan(prompt), config={"callbacks": [callback]})
 ```
+
+> **Warning:** The handler sets `raise_error = True` because LangChain otherwise
+> swallows callback errors and sends the prompt anyway. Don't set it to `False`.
+
+When a string LLM prompt is rejected for masking, the audit log still shows a
+`prompt_scan` event with the action `mask`, even though the call was stopped.
 
 The callback only reads string `content`, so list content isn't scanned.
 Responses aren't scanned either.
