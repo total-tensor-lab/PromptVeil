@@ -39,8 +39,14 @@ def _build_entity_record(
         "entity_type": entity.entity_type,
         "action": action.value,
         "value_preview": masked_value or "[redacted]",
+        "confidence": entity.confidence,
         "position": {"start": entity.start, "end": entity.end},
     }
+
+
+def _optional(**fields: Any) -> Dict[str, Any]:
+    """Drop fields that were not supplied so custom callers keep a lean schema."""
+    return {k: v for k, v in fields.items() if v is not None}
 
 
 class AuditLogger:
@@ -81,6 +87,11 @@ class AuditLogger:
         self,
         entity_records: List[Tuple[DetectedEntity, Action, Optional[str]]],
         prompt_length: int,
+        *,
+        scan_id: Optional[str] = None,
+        method: Optional[str] = None,
+        risk_score: Optional[float] = None,
+        risk_level: Optional[str] = None,
     ) -> None:
         """
         Emit a structured log event summarising the result of a prompt scan.
@@ -89,6 +100,10 @@ class AuditLogger:
             entity_records: List of ``(entity, action, masked_value)`` tuples
                 for every entity that had a non-allow action.
             prompt_length: Character length of the original prompt.
+            scan_id: ID shared by every event from the same scan call.
+            method: The ``Shield`` method that produced the scan.
+            risk_score: Composite risk score (0.0–1.0), as in ``ScanResult``.
+            risk_level: Risk label matching *risk_score*.
         """
         if not entity_records:
             return
@@ -105,9 +120,24 @@ class AuditLogger:
             "detections": len(entities_log),
             "entities": entities_log,
         }
+        event.update(
+            _optional(
+                scan_id=scan_id,
+                method=method,
+                risk_score=risk_score,
+                risk_level=risk_level,
+            )
+        )
         self._logger.info(json.dumps(event))
 
-    def log_blocked(self, entity: DetectedEntity) -> None:
+    def log_blocked(
+        self,
+        entity: DetectedEntity,
+        *,
+        scan_id: Optional[str] = None,
+        method: Optional[str] = None,
+        prompt_length: Optional[int] = None,
+    ) -> None:
         """
         Emit a warning-level log event for a blocked entity.
 
@@ -116,11 +146,19 @@ class AuditLogger:
 
         Args:
             entity: The entity whose type matched a ``block`` rule.
+            scan_id: ID shared by every event from the same scan call.
+            method: The ``Shield`` method that produced the scan.
+            prompt_length: Character length of the original prompt.
         """
         event: Dict[str, Any] = {
             "event": "prompt_blocked",
             "timestamp": _utc_now(),
             "entity_type": entity.entity_type,
             "action": "block",
+            "confidence": entity.confidence,
+            "position": {"start": entity.start, "end": entity.end},
         }
+        event.update(
+            _optional(scan_id=scan_id, method=method, prompt_length=prompt_length)
+        )
         self._logger.warning(json.dumps(event))
