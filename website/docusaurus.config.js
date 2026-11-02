@@ -55,6 +55,7 @@ const config = {
         items: [
           {type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs'},
           {to: '/api-reference', label: 'API Reference', position: 'left'},
+          {href: 'https://www.totaltensorlab.com/#/products/promptveil', label: 'Home', position: 'right'},
           {href: 'https://pypi.org/project/promptveil/', label: 'PyPI', position: 'right'},
           {href: 'https://github.com/total-tensor-lab/PromptVeil', label: 'GitHub', position: 'right'},
         ],
