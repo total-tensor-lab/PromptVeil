@@ -7,7 +7,7 @@ const config = {
   tagline: 'Privacy and safety middleware for LLM applications',
   favicon: 'img/logo.svg',
 
-  url: 'https://total-tensor-lab.github.io',
+  url: 'https://www.totaltensorlab.com',
   baseUrl: '/PromptVeil/',
   organizationName: 'total-tensor-lab',
   projectName: 'PromptVeil',
