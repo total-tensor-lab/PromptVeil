@@ -458,20 +458,35 @@ Writes one JSON object per line to `stream`, or to `stdout` by default.
 When it does attach a handler, it sets the level to `INFO` and turns off
 propagation to the root logger.
 
-`Shield` calls these two methods, so override them to send events elsewhere:
+`Shield` calls these two methods, so override them to send events elsewhere.
+Both receive keyword-only metadata (below), so a custom logger must accept
+`**metadata` or the named keywords.
 
 | Method | Event | Level |
 |---|---|---|
-| `log_scan_result(entity_records, prompt_length)` | `prompt_scan` | `INFO` |
-| `log_blocked(entity)` | `prompt_blocked` | `WARNING` |
+| `log_scan_result(entity_records, prompt_length, *, scan_id, method, risk_score, risk_level)` | `prompt_scan` | `INFO` |
+| `log_blocked(entity, *, scan_id, method, prompt_length)` | `prompt_blocked` | `WARNING` |
 
 `entity_records` is a list of `(entity, action, masked_value)` tuples. A
 `prompt_scan` event is written only when something was masked, so scans with no
 findings or only `allow` entities produce no log line.
 
+Metadata fields:
+
+| Field | Events | Meaning |
+|---|---|---|
+| `scan_id` | both | Random hex ID for one scan call |
+| `method` | both | `scan`, `scan_response`, `scan_detailed` or `scan_with_vault` |
+| `risk_score`, `risk_level` | `prompt_scan` | Same model as `ScanResult` |
+| `prompt_length` | both | Characters in the scanned text |
+| `entities[].confidence` / `confidence` | both | Detector confidence, 0.0–1.0 |
+| `position` | `prompt_blocked` (and each entity in `prompt_scan`) | `start`/`end` in the original text |
+
+Fields a caller doesn't supply are omitted. Raw values are never logged.
+
 ```json
-{"event": "prompt_scan", "timestamp": "2026-05-03T07:34:19.800456+00:00", "prompt_length": 44, "detections": 1, "entities": [{"entity_type": "email", "action": "mask", "value_preview": "a***@example.com", "position": {"start": 26, "end": 43}}]}
-{"event": "prompt_blocked", "timestamp": "2026-05-03T07:34:19.800456+00:00", "entity_type": "api_key", "action": "block"}
+{"event": "prompt_scan", "timestamp": "2026-05-03T07:34:19.800456+00:00", "prompt_length": 44, "detections": 1, "entities": [{"entity_type": "email", "action": "mask", "value_preview": "a***@example.com", "confidence": 1.0, "position": {"start": 26, "end": 43}}], "scan_id": "886a7d3fbf38460e9f2bbf221727b3e0", "method": "scan", "risk_score": 0.4, "risk_level": "MEDIUM"}
+{"event": "prompt_blocked", "timestamp": "2026-05-03T07:34:19.800456+00:00", "entity_type": "api_key", "action": "block", "confidence": 1.0, "position": {"start": 5, "end": 34}, "scan_id": "0b9c1e5a7d3f4c2e8a6b1d4f9e7c3a52", "method": "scan", "prompt_length": 34}
 ```
 
 Logs contain masked previews, or vault tokens for `scan_with_vault`, and never

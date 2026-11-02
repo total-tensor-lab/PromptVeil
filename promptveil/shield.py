@@ -9,8 +9,9 @@ This module exposes the primary public API.  Import and use it as::
     safe_prompt = shield.scan(prompt)
 """
 
+import uuid
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from .actions.blocker import block
 from .actions.masker import apply_masks, mask_value
@@ -23,6 +24,11 @@ from .policy.engine import PolicyEngine
 from .policy.models import Action, PolicyConfig
 from .results import EntityResult, ScanResult, _compute_risk_score, _risk_level
 from .vault import PseudonymVault
+
+
+def _new_scan_id() -> str:
+    """Return a short random ID that correlates audit events from one scan."""
+    return uuid.uuid4().hex
 
 
 class Shield:
@@ -140,10 +146,16 @@ class Shield:
                 ``block`` action in the active policy.
             TypeError: If *prompt* is not a ``str``.
         """
+        return self._scan(prompt, "scan")
+
+    def _scan(self, prompt: str, method: str) -> str:
+        """Implementation of :meth:`scan`; *method* is recorded in the audit log."""
         if not isinstance(prompt, str):
             raise TypeError(
                 f"prompt must be a str, got {type(prompt).__name__!r}."
             )
+
+        scan_id = _new_scan_id()
 
         # --- 1. Detect --------------------------------------------------
         all_entities = self._detect(prompt)
@@ -157,7 +169,9 @@ class Shield:
         # --- 3. Block (fail-fast) ----------------------------------------
         for entity, action in evaluated.items():
             if action == Action.BLOCK:
-                self._logger.log_blocked(entity)
+                self._logger.log_blocked(
+                    entity, scan_id=scan_id, method=method, prompt_length=len(prompt)
+                )
                 block(entity)  # always raises SensitiveDataError
 
         # --- 4 & 5. Collect masks / allows --------------------------------
@@ -169,7 +183,13 @@ class Shield:
                 (entity, Action.MASK, mask_value(entity.value, entity.entity_type))
                 for entity in to_mask
             ]
-            self._logger.log_scan_result(log_records, len(prompt))
+            self._logger.log_scan_result(
+                log_records,
+                len(prompt),
+                scan_id=scan_id,
+                method=method,
+                **self._risk_fields(evaluated, to_mask),
+            )
 
         # --- Apply masking ------------------------------------------------
         if to_mask:
@@ -193,7 +213,7 @@ class Shield:
         Raises:
             SensitiveDataError: Same conditions as :meth:`scan`.
         """
-        return self.scan(response)
+        return self._scan(response, "scan_response")
 
     def _detect(self, prompt: str) -> List[DetectedEntity]:
         """Run every detector and return all matches, overlapping or not."""
@@ -214,6 +234,28 @@ class Shield:
         the detector registered first wins.
         """
         return _resolve_overlaps([e for e, a in evaluated.items() if a == Action.MASK])
+
+    @staticmethod
+    def _risk_fields(
+        evaluated: Dict[DetectedEntity, Action],
+        selected: List[DetectedEntity],
+    ) -> Dict[str, Any]:
+        """Risk score/level for audit logs, using the same model as ``scan_detailed``."""
+        chosen = set(selected)
+        results = [
+            EntityResult(
+                entity_type=e.entity_type,
+                action="mask" if e in chosen else "allow",
+                start=e.start,
+                end=e.end,
+                masked_value="",
+                confidence=e.confidence,
+            )
+            for e, a in evaluated.items()
+            if a == Action.ALLOW or e in chosen
+        ]
+        score = _compute_risk_score(results)
+        return {"risk_score": score, "risk_level": _risk_level(score)}
 
     def add_detector(self, detector: BaseDetector) -> None:
         """
@@ -256,6 +298,8 @@ class Shield:
                 f"prompt must be a str, got {type(prompt).__name__!r}."
             )
 
+        scan_id = _new_scan_id()
+
         # 1. Detect
         all_entities = self._detect(prompt)
 
@@ -274,7 +318,12 @@ class Shield:
         # 3. Block (fail-fast)
         for entity, action in evaluated.items():
             if action == Action.BLOCK:
-                self._logger.log_blocked(entity)
+                self._logger.log_blocked(
+                    entity,
+                    scan_id=scan_id,
+                    method="scan_detailed",
+                    prompt_length=len(prompt),
+                )
                 block(entity)
 
         # 4. Build per-entity results and collect masks
@@ -316,7 +365,13 @@ class Shield:
                 (e, Action.MASK, mask_value(e.value, e.entity_type))
                 for e in to_mask
             ]
-            self._logger.log_scan_result(log_records, len(prompt))
+            self._logger.log_scan_result(
+                log_records,
+                len(prompt),
+                scan_id=scan_id,
+                method="scan_detailed",
+                **self._risk_fields(evaluated, to_mask),
+            )
 
         safe_text = apply_masks(prompt, to_mask) if to_mask else prompt
         risk_score = _compute_risk_score(entity_results)
@@ -379,6 +434,8 @@ class Shield:
         if vault is None:
             vault = PseudonymVault()
 
+        scan_id = _new_scan_id()
+
         # 1. Detect
         all_entities = self._detect(prompt)
 
@@ -391,7 +448,12 @@ class Shield:
         # 3. Block (fail-fast)
         for entity, action in evaluated.items():
             if action == Action.BLOCK:
-                self._logger.log_blocked(entity)
+                self._logger.log_blocked(
+                    entity,
+                    scan_id=scan_id,
+                    method="scan_with_vault",
+                    prompt_length=len(prompt),
+                )
                 block(entity)
 
         # 4. Pseudonymize entities that would be masked
@@ -407,6 +469,12 @@ class Shield:
             (entity, Action.MASK, vault.get_token(entity.value) or "***")
             for entity in to_pseudonymize
         ]
-        self._logger.log_scan_result(log_records, len(prompt))
+        self._logger.log_scan_result(
+            log_records,
+            len(prompt),
+            scan_id=scan_id,
+            method="scan_with_vault",
+            **self._risk_fields(evaluated, to_pseudonymize),
+        )
 
         return pseudonymized, vault

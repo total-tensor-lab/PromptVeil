@@ -2,6 +2,20 @@
 
 All notable changes to PromptVeil are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Audit log events now include `scan_id`, `method`, per-entity `confidence`,
+  and (for `prompt_scan`) `risk_score` and `risk_level`. `prompt_blocked` events
+  also include `position` and `prompt_length`.
+
+### Changed
+
+- `AuditLogger.log_scan_result` and `log_blocked` now receive extra keyword-only
+  metadata from `Shield`. Custom loggers must accept these keywords (or
+  `**metadata`).
+
 ## [0.1.4] - 2026-11-01
 
 ### Security

@@ -30,11 +30,11 @@ def pytest_benchmark_update_json(output_json):
 class NullAuditLogger:
     """No-op logger so benchmark timings exclude stdout I/O."""
 
-    def log_scan_result(self, entity_records, prompt_length: int) -> None:
-        del entity_records, prompt_length
+    def log_scan_result(self, entity_records, prompt_length: int, **metadata) -> None:
+        del entity_records, prompt_length, metadata
 
-    def log_blocked(self, entity) -> None:
-        del entity
+    def log_blocked(self, entity, **metadata) -> None:
+        del entity, metadata
 
 
 def _mask_all_config() -> PolicyConfig:
