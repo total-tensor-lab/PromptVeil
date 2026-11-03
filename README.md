@@ -60,6 +60,7 @@ Requires **Python ≥ 3.10**.
 
 - [Quickstart](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
 - [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
+- [Benchmarks](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/benchmarks.md)
 - [Changelog](https://github.com/total-tensor-lab/PromptVeil/blob/master/CHANGELOG.md)
 - [Security policy](https://github.com/total-tensor-lab/PromptVeil/blob/master/SECURITY.md)
 - [Contributing](https://github.com/total-tensor-lab/PromptVeil/blob/master/CONTRIBUTING.md)

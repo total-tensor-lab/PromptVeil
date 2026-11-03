@@ -29,7 +29,7 @@ from benchmarks.accuracy.loaders import (
 from benchmarks.accuracy.scoring import Span, TypeCounts, aggregate, format_metric, match_sample, micro
 
 RESULTS_DIR = ROOT / "benchmarks" / "accuracy" / "results"
-INSTALL_HINT = 'Install the benchmark extra: pip install "promptveil[bench]"'
+INSTALL_HINT = 'Install the benchmark extra from the repo root: pip install -e ".[bench]" (promptveil[bench])'
 
 
 def default_detectors() -> list[BaseDetector]:
