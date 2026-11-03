@@ -119,8 +119,19 @@ def load_nemotron(limit: int = DEFAULT_LIMIT, seed: int = DEFAULT_SEED) -> LoadR
     return _collect(ds, parse_nemotron_row, NEMOTRON_REVISION)
 
 
-def load_promptveil_bench(path: Path = BENCH_PATH) -> LoadResult:
-    raw = path.read_bytes()
+def load_promptveil_bench(path: Path | None = None) -> LoadResult:
+    """Load PromptVeil-Bench from *path*, else from a local export, else generate it.
+
+    The dataset is not committed: its fake API keys trip secret scanners. The
+    seeded generator reproduces it byte for byte, so the revision is stable.
+    """
+    path = path or BENCH_PATH
+    if path.exists():
+        raw = path.read_bytes()
+    else:
+        from benchmarks.accuracy.generate_bench import generate, serialize  # avoids a circular import
+
+        raw = serialize(generate()).encode("utf-8")
     rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
 
     def parse(row: Mapping[str, Any]) -> tuple[Sample, int]:

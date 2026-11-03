@@ -220,3 +220,6 @@ __marimo__/
 # Local benchmark reports
 benchmarks/results/*
 !benchmarks/results/.gitkeep
+
+# PromptVeil-Bench export (generated; contains fake API keys)
+benchmarks/accuracy/data/

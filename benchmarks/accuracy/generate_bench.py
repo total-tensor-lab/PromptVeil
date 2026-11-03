@@ -6,7 +6,9 @@ PromptVeil's detector regexes, so the set measures the detectors rather than
 mirroring them. Spans are recorded while values are inserted, so labels are
 correct by construction.
 
-Run ``python -m benchmarks.accuracy.generate_bench`` to rewrite the JSONL file.
+The runner generates the set in memory. Run
+``python -m benchmarks.accuracy.generate_bench`` to export it as a local JSONL
+file (git-ignored: its fake API keys trip secret scanners).
 """
 
 from __future__ import annotations

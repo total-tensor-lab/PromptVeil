@@ -145,7 +145,7 @@ occasional lowercase. They are not copied from PromptVeil's own patterns. The
 |---|---|---|---|
 | [nvidia/Nemotron-PII](https://huggingface.co/datasets/nvidia/Nemotron-PII) | CC BY 4.0 | `b70ffaf5ff39e079776134c5bf4381f00a9fd1ed` | test split, 5,000 documents, seed 20261103 |
 | [gretelai/synthetic_pii_finance_multilingual](https://huggingface.co/datasets/gretelai/synthetic_pii_finance_multilingual) | Apache 2.0 | `7b844d16738527a04264f50214cb426a4cea0897` | English test split, 2,891 documents |
-| PromptVeil-Bench v1 | MIT (this repo) | sha256 `b805cf48df92…` | all 1,000 rows |
+| PromptVeil-Bench v1 | MIT (this repo) | sha256 `b805cf48df92…` (generated from seed 20261103) | all 1,000 rows |
 
 Nemotron-PII is © NVIDIA Corporation, used under
 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The public datasets
@@ -193,8 +193,13 @@ python -m benchmarks.accuracy.run
 
 The runner writes a JSON report and `latest.md` to `benchmarks/accuracy/results/`.
 Options are `--datasets gretel,nemotron,promptveil_bench`, `--limit` (Nemotron
-sample size) and `--seed`. To regenerate PromptVeil-Bench, run
-`python -m benchmarks.accuracy.generate_bench`.
+sample size) and `--seed`.
+
+PromptVeil-Bench is generated in memory from a fixed seed, and its checksum
+always matches the one above. It isn't committed, because its fake API keys
+trip secret scanners. To export it as a JSONL file, run
+`python -m benchmarks.accuracy.generate_bench`. The file is written to
+`benchmarks/accuracy/data/` and the runner reads it from there.
 
 ## Performance
 

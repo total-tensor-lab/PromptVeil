@@ -51,7 +51,7 @@ benchmarks/accuracy/
     labels.py         # dataset label -> PromptVeil type mapping
     datasets.py       # loaders: gretel, nemotron, promptveil_bench -> Sample
     generate_bench.py # seeded generator for PromptVeil-Bench
-    data/promptveil_bench_v1.jsonl   # committed output of generate_bench.py
+    data/promptveil_bench_v1.jsonl   # optional local export (git-ignored; generated in memory by default)
     results/          # JSON + Markdown output of each run
 ```
 
