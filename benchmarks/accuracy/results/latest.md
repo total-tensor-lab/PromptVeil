@@ -31,9 +31,9 @@ _Labels are incomplete for this dataset, so results are recall only._
 | in_voter_id | 0 | 0 | 16 | 0 | n < 20 | n < 20 | n < 20 |
 | phone | 1466 | 1194 | 1085 | 272 | 52.4% | 81.4% | 63.8% |
 | ssn | 291 | 289 | 641 | 2 | 31.1% | 99.3% | 47.3% |
-| us_ein | 25 | 7 | 41 | 18 | 14.6% | 28.0% | 19.2% |
+| us_ein | 7 | 7 | 41 | 0 | n < 20 | n < 20 | n < 20 |
 | us_passport | 0 | 0 | 121 | 0 | n < 20 | n < 20 | n < 20 |
-| **Micro avg** | 5290 | 4726 | 2031 | 564 | 69.9% | 89.3% | 78.5% |
+| **Micro avg** | 5272 | 4726 | 2031 | 546 | 69.9% | 89.6% | 78.6% |
 
 ### promptveil_bench
 
