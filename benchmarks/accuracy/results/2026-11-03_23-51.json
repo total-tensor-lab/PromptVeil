@@ -19,183 +19,183 @@
       "overlap": {
         "api_key": {
           "tp": 14,
-          "fp": 2,
+          "fp": null,
           "fn": 40,
-          "precision": 0.875,
+          "precision": null,
           "recall": 0.25925925925925924,
-          "f1": 0.39999999999999997
+          "f1": null
         },
         "credit_card": {
           "tp": 29,
-          "fp": 13,
+          "fp": null,
           "fn": 54,
-          "precision": 0.6904761904761905,
+          "precision": null,
           "recall": 0.3493975903614458,
-          "f1": 0.4639999999999999
+          "f1": null
         },
         "email": {
           "tp": 303,
-          "fp": 507,
+          "fp": null,
           "fn": 27,
-          "precision": 0.37407407407407406,
+          "precision": null,
           "recall": 0.9181818181818182,
-          "f1": 0.531578947368421
+          "f1": null
         },
         "in_aadhaar": {
           "tp": 0,
-          "fp": 10,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "in_passport": {
           "tp": 0,
-          "fp": 42,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "in_voter_id": {
           "tp": 0,
-          "fp": 14,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "phone": {
           "tp": 407,
-          "fp": 970,
+          "fp": null,
           "fn": 73,
-          "precision": 0.29557007988380535,
+          "precision": null,
           "recall": 0.8479166666666667,
-          "f1": 0.4383414108777598
+          "f1": null
         },
         "ssn": {
           "tp": 70,
-          "fp": 541,
+          "fp": null,
           "fn": 15,
-          "precision": 0.11456628477905073,
+          "precision": null,
           "recall": 0.8235294117647058,
-          "f1": 0.20114942528735633
+          "f1": null
         },
         "us_ein": {
           "tp": 0,
-          "fp": 95,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "us_passport": {
           "tp": 33,
-          "fp": 19,
+          "fp": null,
           "fn": 43,
-          "precision": 0.6346153846153846,
+          "precision": null,
           "recall": 0.4342105263157895,
-          "f1": 0.515625
+          "f1": null
         }
       },
       "strict": {
         "api_key": {
           "tp": 13,
-          "fp": 3,
+          "fp": null,
           "fn": 41,
-          "precision": 0.8125,
+          "precision": null,
           "recall": 0.24074074074074073,
-          "f1": 0.3714285714285714
+          "f1": null
         },
         "credit_card": {
           "tp": 29,
-          "fp": 13,
+          "fp": null,
           "fn": 54,
-          "precision": 0.6904761904761905,
+          "precision": null,
           "recall": 0.3493975903614458,
-          "f1": 0.4639999999999999
+          "f1": null
         },
         "email": {
           "tp": 268,
-          "fp": 542,
+          "fp": null,
           "fn": 62,
-          "precision": 0.3308641975308642,
+          "precision": null,
           "recall": 0.8121212121212121,
-          "f1": 0.4701754385964912
+          "f1": null
         },
         "in_aadhaar": {
           "tp": 0,
-          "fp": 10,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "in_passport": {
           "tp": 0,
-          "fp": 42,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "in_voter_id": {
           "tp": 0,
-          "fp": 14,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "phone": {
           "tp": 380,
-          "fp": 997,
+          "fp": null,
           "fn": 100,
-          "precision": 0.27596223674655046,
+          "precision": null,
           "recall": 0.7916666666666666,
-          "f1": 0.40926225094238017
+          "f1": null
         },
         "ssn": {
           "tp": 70,
-          "fp": 541,
+          "fp": null,
           "fn": 15,
-          "precision": 0.11456628477905073,
+          "precision": null,
           "recall": 0.8235294117647058,
-          "f1": 0.20114942528735633
+          "f1": null
         },
         "us_ein": {
           "tp": 0,
-          "fp": 95,
+          "fp": null,
           "fn": 0,
-          "precision": 0.0,
+          "precision": null,
           "recall": 0.0,
-          "f1": 0.0
+          "f1": null
         },
         "us_passport": {
           "tp": 33,
-          "fp": 19,
+          "fp": null,
           "fn": 43,
-          "precision": 0.6346153846153846,
+          "precision": null,
           "recall": 0.4342105263157895,
-          "f1": 0.515625
+          "f1": null
         }
       },
       "micro": {
         "overlap": {
           "tp": 856,
-          "fp": 2213,
+          "fp": null,
           "fn": 252,
-          "precision": 0.27891821440208536,
+          "precision": null,
           "recall": 0.7725631768953068,
-          "f1": 0.40986353842470674
+          "f1": null
         },
         "strict": {
           "tp": 793,
-          "fp": 2276,
+          "fp": null,
           "fn": 315,
-          "precision": 0.2583903551645487,
+          "precision": null,
           "recall": 0.7157039711191335,
-          "f1": 0.3796983480967201
+          "f1": null
         }
       }
     },
@@ -280,10 +280,10 @@
         "us_ein": {
           "tp": 7,
           "fp": 41,
-          "fn": 18,
+          "fn": 0,
           "precision": 0.14583333333333334,
-          "recall": 0.28,
-          "f1": 0.1917808219178082
+          "recall": 1.0,
+          "f1": 0.2545454545454546
         },
         "us_passport": {
           "tp": 0,
@@ -370,10 +370,10 @@
         "us_ein": {
           "tp": 7,
           "fp": 41,
-          "fn": 18,
+          "fn": 0,
           "precision": 0.14583333333333334,
-          "recall": 0.28,
-          "f1": 0.1917808219178082
+          "recall": 1.0,
+          "f1": 0.2545454545454546
         },
         "us_passport": {
           "tp": 0,
@@ -388,18 +388,18 @@
         "overlap": {
           "tp": 4726,
           "fp": 2031,
-          "fn": 564,
+          "fn": 546,
           "precision": 0.699422820778452,
-          "recall": 0.8933837429111531,
-          "f1": 0.7845936747738026
+          "recall": 0.8964339908952959,
+          "f1": 0.7857677279906893
         },
         "strict": {
           "tp": 4701,
           "fp": 2056,
-          "fn": 589,
+          "fn": 571,
           "precision": 0.6957229539736569,
-          "recall": 0.8886578449905482,
-          "f1": 0.7804432638831245
+          "recall": 0.8916919575113809,
+          "f1": 0.7816111064926426
         }
       }
     },

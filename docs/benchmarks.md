@@ -20,7 +20,7 @@ Results are for PromptVeil 0.2.0, run on 2026-11-03.
 - **India IDs: 95.0% recall at 99.3% precision** on PromptVeil-Bench (Aadhaar,
   PAN, GSTIN, IFSC, voter ID and Indian passport; 300 values). No public
   benchmark labels these types, so this number comes from our own set.
-- **Overall on Nemotron-PII: 89.3% recall, 69.9% precision.** Most false
+- **Overall on Nemotron-PII: 89.6% recall, 69.9% precision.** Most false
   positives come from the SSN and phone patterns matching other numeric IDs,
   such as bank routing and account numbers.
 
@@ -39,8 +39,8 @@ count is still shown, because those false positives are real.
 
 A seeded random sample of 5,000 documents from the test split. Both the US and
 international locales are included, and documents were not filtered by
-content. Of the gold spans, 614 were skipped because their offsets didn't match
-the text.
+content. 614 of the 42,024 gold spans of all types were skipped because their
+offsets didn't match the text. Only 3 of those were of a scored type.
 
 | Type | Gold | TP | FP | FN | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -53,9 +53,9 @@ the text.
 | in_voter_id | 0 | 0 | 16 | 0 | n < 20 | n < 20 | n < 20 |
 | phone | 1466 | 1194 | 1085 | 272 | 52.4% | 81.4% | 63.8% |
 | ssn | 291 | 289 | 641 | 2 | 31.1% | 99.3% | 47.3% |
-| us_ein | 25 | 7 | 41 | 18 | 14.6% | 28.0% | 19.2% |
+| us_ein | 7 | 7 | 41 | 0 | n < 20 | n < 20 | n < 20 |
 | us_passport | 0 | 0 | 121 | 0 | n < 20 | n < 20 | n < 20 |
-| **Micro avg** | 5290 | 4726 | 2031 | 564 | 69.9% | 89.3% | 78.5% |
+| **Micro avg** | 5272 | 4726 | 2031 | 546 | 69.9% | 89.6% | 78.6% |
 
 ### Gretel synthetic PII (finance), English
 
@@ -121,18 +121,21 @@ occasional lowercase. They are not copied from PromptVeil's own patterns. The
 - **Matching.** A detection is a true positive when it has the same type as a
   gold span and overlaps it. Each gold span can match only one detection.
   `phone` and `in_phone` count as the same type. Under a strict rule that
-  requires exact boundaries, micro recall is 88.9% on Nemotron-PII, 71.6% on
+  requires exact boundaries, micro recall is 89.2% on Nemotron-PII, 71.6% on
   Gretel and 89.3% on PromptVeil-Bench.
 - **False positives.** Any detection that doesn't match counts as a false
   positive. That includes detections that land on a labelled value of a type
   we don't support, such as a bank routing number flagged as an SSN. Users see
   this as over-masking, so it counts against precision.
 - **Label mapping.** The dataset labels map to PromptVeil types as follows:
-  - Nemotron-PII: `email`, `phone_number` and `fax_number` → phone,
-    `credit_debit_card` → credit_card, `ssn`, `api_key`, and `tax_id` → us_ein
-    (US-locale documents only).
-  - Gretel: `email`, `phone_number`, `credit_card_number`, `ssn`, `api_key`,
-    and `passport_number` → us_passport.
+  - Nemotron-PII: `email` → email; `phone_number` and `fax_number` → phone;
+    `credit_debit_card` → credit_card; `ssn` → ssn; `api_key` → api_key;
+    `tax_id` → us_ein only on US-locale documents and only in the EIN format
+    `NN-NNNNNNN`. 18 of the 25 US `tax_id` values in the sample are
+    SSN/ITIN-formatted, so they are not scored as EINs.
+  - Gretel: `email` → email; `phone_number` → phone; `credit_card_number` →
+    credit_card; `ssn` → ssn; `api_key` → api_key; `passport_number` →
+    us_passport.
 - **No combined score.** Public and in-house results are reported separately
   and never averaged together.
 
@@ -170,9 +173,9 @@ academic and non-commercial use.
 - **Lowercase Indian IDs.** PAN, GSTIN, IFSC and voter ID numbers typed in
   lowercase are missed.
 - **English only.** Non-English text is not evaluated.
-- **Dataset noise.** Some gold labels are imperfect. Gretel labels a few
-  placeholders like `[Phone Number]` as phones. Some Nemotron `tax_id` values
-  are SSN-formatted, which lowers us_ein recall.
+- **Dataset noise.** Some gold labels are imperfect. Gretel labels
+  placeholders like `[Phone Number]` as phones, and its `ssn` labels include
+  non-US national IDs, which lowers ssn recall there.
 
 These are tracked as detector improvements. The numbers above will change as
 they land.
