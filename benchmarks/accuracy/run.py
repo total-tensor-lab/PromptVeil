@@ -43,7 +43,10 @@ def predict(text: str, detectors: Sequence[BaseDetector]) -> list[Span]:
     return [Span(e.start, e.end, e.entity_type) for e in _resolve_overlaps(entities)]
 
 
-def _as_dict(c: TypeCounts) -> dict[str, Any]:
+def _as_dict(c: TypeCounts, labels_complete: bool = True) -> dict[str, Any]:
+    if not labels_complete:
+        # FP counts are not trustworthy, so neither are precision or F1.
+        return {"tp": c.tp, "fp": None, "fn": c.fn, "precision": None, "recall": c.recall, "f1": None}
     return {"tp": c.tp, "fp": c.fp, "fn": c.fn, "precision": c.precision, "recall": c.recall, "f1": c.f1}
 
 
@@ -54,14 +57,18 @@ def evaluate(result: LoadResult, detectors: Sequence[BaseDetector]) -> dict[str,
         overlap.append(match_sample(sample.spans, pred))
         strict.append(match_sample(sample.spans, pred, strict=True))
     overlap_totals, strict_totals = aggregate(overlap), aggregate(strict)
+    complete = result.labels_complete
     return {
         "samples": len(result.samples),
         "skipped_spans": result.skipped_spans,
         "revision": result.revision,
         "labels_complete": result.labels_complete,
-        "overlap": {k: _as_dict(v) for k, v in sorted(overlap_totals.items())},
-        "strict": {k: _as_dict(v) for k, v in sorted(strict_totals.items())},
-        "micro": {"overlap": _as_dict(micro(overlap_totals)), "strict": _as_dict(micro(strict_totals))},
+        "overlap": {k: _as_dict(v, complete) for k, v in sorted(overlap_totals.items())},
+        "strict": {k: _as_dict(v, complete) for k, v in sorted(strict_totals.items())},
+        "micro": {
+            "overlap": _as_dict(micro(overlap_totals), complete),
+            "strict": _as_dict(micro(strict_totals), complete),
+        },
     }
 
 
@@ -138,6 +145,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"{name}: failed to load: {exc}", file=sys.stderr)
             report["errors"][name] = f"{type(exc).__name__}: {exc}"
             continue
+        if result.skipped_spans:
+            print(f"{name}: skipped {result.skipped_spans} gold spans with misaligned offsets", file=sys.stderr)
         report["datasets"][name] = evaluate(result, detectors)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
