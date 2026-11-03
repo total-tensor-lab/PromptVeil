@@ -6,6 +6,7 @@ import ast
 from dataclasses import dataclass
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
@@ -21,6 +22,8 @@ GRETEL_FILE = "data/English_test-00000-of-00001.parquet"
 NEMOTRON_REPO = "nvidia/Nemotron-PII"
 NEMOTRON_REVISION = "b70ffaf5ff39e079776134c5bf4381f00a9fd1ed"
 NEMOTRON_FILE = "data/test-00000-of-00001.parquet"
+
+_EIN_FORMAT = re.compile(r"\d{2}-\d{7}")
 
 DEFAULT_LIMIT = 5000
 DEFAULT_SEED = 20261103
@@ -41,7 +44,7 @@ class LoadResult:
 
 
 def _build_spans(
-    text: str, raw_spans: Iterable[Mapping[str, Any]], to_label: Callable[[str], str]
+    text: str, raw_spans: Iterable[Mapping[str, Any]], to_label: Callable[[Mapping[str, Any]], str]
 ) -> tuple[tuple[Span, ...], int]:
     """Validate raw spans against *text*; return the good ones and a skip count."""
     spans: list[Span] = []
@@ -54,14 +57,14 @@ def _build_spans(
         if "text" in s and text[start:end] != s["text"]:
             skipped += 1
             continue
-        spans.append(Span(start, end, to_label(s["label"])))
+        spans.append(Span(start, end, to_label(s)))
     return tuple(spans), skipped
 
 
 def parse_gretel_row(row: Mapping[str, Any]) -> tuple[Sample, int]:
     text = row["generated_text"]
     spans, skipped = _build_spans(
-        text, json.loads(row["pii_spans"]), lambda label: map_label(GRETEL, label)
+        text, json.loads(row["pii_spans"]), lambda s: map_label(GRETEL, s["label"])
     )
     return Sample("gretel", str(row["__index_level_0__"]), text, spans), skipped
 
@@ -70,13 +73,16 @@ def parse_nemotron_row(row: Mapping[str, Any]) -> tuple[Sample, int]:
     text = row["text"]
     is_us = row["locale"] == "us"
 
-    def to_label(label: str) -> str:
-        if label == "tax_id":
-            return "us_ein" if is_us else UNSUPPORTED
-        return map_label(NEMOTRON, label)
+    raw_spans = ast.literal_eval(row["spans"])  # a Python literal, not JSON
 
-    # Nemotron stores spans as a Python literal, not JSON.
-    spans, skipped = _build_spans(text, ast.literal_eval(row["spans"]), to_label)
+    def to_label(span: Mapping[str, Any]) -> str:
+        if span["label"] == "tax_id":
+            # Most US tax_id values are SSN/ITIN-formatted; only NN-NNNNNNN is an EIN.
+            value = text[span["start"]:span["end"]]
+            return "us_ein" if is_us and _EIN_FORMAT.fullmatch(value) else UNSUPPORTED
+        return map_label(NEMOTRON, span["label"])
+
+    spans, skipped = _build_spans(text, raw_spans, to_label)
     return Sample("nemotron", str(row["uid"]), text, spans), skipped
 
 
@@ -118,7 +124,7 @@ def load_promptveil_bench(path: Path = BENCH_PATH) -> LoadResult:
     rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
 
     def parse(row: Mapping[str, Any]) -> tuple[Sample, int]:
-        spans, skipped = _build_spans(row["text"], row["spans"], lambda label: label)
+        spans, skipped = _build_spans(row["text"], row["spans"], lambda s: s["label"])
         return Sample("promptveil_bench", row["id"], row["text"], spans), skipped
 
     return _collect(rows, parse, hashlib.sha256(raw).hexdigest()[:12])

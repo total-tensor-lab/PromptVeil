@@ -94,3 +94,18 @@ def test_incomplete_labels_report_recall_only():
 def test_evaluate_carries_labels_complete():
     result = LoadResult([], 0, "rev", labels_complete=False)
     assert run.evaluate(result, run.default_detectors())["labels_complete"] is False
+
+
+def test_evaluate_nulls_precision_when_labels_incomplete():
+    text = "mail alice@example.com or bob@example.com"
+    result = LoadResult([Sample("t", "1", text, (Span(5, 22, "email"),))], 0, "rev", labels_complete=False)
+    report = run.evaluate(result, run.default_detectors())
+    for counts in (report["overlap"]["email"], report["micro"]["overlap"], report["strict"]["email"]):
+        assert counts["fp"] is None and counts["precision"] is None and counts["f1"] is None
+    assert report["overlap"]["email"]["recall"] == 1.0
+
+
+def test_main_warns_on_skipped_spans(monkeypatch, capsys, tmp_path):
+    monkeypatch.setitem(LOADERS, "promptveil_bench", lambda **_: LoadResult([], 3, "rev"))
+    assert run.main(["--datasets", "promptveil_bench", "--out-dir", str(tmp_path)]) == 0
+    assert "promptveil_bench: skipped 3 gold spans with misaligned offsets" in capsys.readouterr().err

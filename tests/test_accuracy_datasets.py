@@ -111,3 +111,10 @@ def test_gretel_labels_marked_incomplete(monkeypatch):
     monkeypatch.setattr(loaders, "_load_hf", lambda *a: [])
     assert loaders.load_gretel().labels_complete is False
     assert loaders.load_promptveil_bench().labels_complete is True
+
+
+def test_nemotron_ssn_format_tax_id_is_unsupported():
+    text = "TIN 123-45-6789"
+    spans = [{"start": 4, "end": 15, "text": "123-45-6789", "label": "tax_id"}]
+    sample, _ = parse_nemotron_row(_nemotron_row(text, spans, locale="us"))
+    assert sample.spans == (Span(4, 15, UNSUPPORTED),)
