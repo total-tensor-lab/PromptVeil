@@ -500,7 +500,12 @@ four digits of a card.
 ### `wrap_openai`
 
 ```python
-wrap_openai(client, shield: Shield, vault: PseudonymVault | None = None)
+wrap_openai(
+    client,
+    shield: Shield,
+    vault: PseudonymVault | None = None,
+    scan_responses: bool = False,
+)
 ```
 
 Requires `pip install "promptveil[openai]"`. Raises `ImportError` otherwise.
@@ -517,12 +522,26 @@ from promptveil.adapters import wrap_openai
 client = wrap_openai(OpenAI(), shield)
 ```
 
+With `scan_responses=True`, the string `message.content` of every returned
+choice is also passed through `shield.scan_response`, for both `OpenAI` and
+`AsyncOpenAI` clients:
+
+- **Mask:** the content is masked in the returned response object.
+- **Block:** `SensitiveDataError` is raised. The API call has already been made.
+- **Tool calls:** choices whose `content` is `None` are skipped.
+- **Streaming:** calling with `stream=True` raises `ConfigurationError` before
+  any request is sent, because a stream can't be scanned before it reaches you.
+
+Audit events for replies use `method: "scan_response"`. Vault tokens such as
+`<EMAIL_1>` aren't detected, so `vault` and `scan_responses` can be combined.
+
 Some content isn't scanned:
 
 - **List content:** only string `content` is scanned. Multimodal messages, where
   `content` is a list of parts, are sent as they are.
-- **Responses:** replies aren't scanned or restored. With a `vault`, call
-  `vault.restore()` on the reply yourself.
+- **Responses:** without `scan_responses=True`, replies aren't scanned. Replies
+  are never restored; with a `vault`, call `vault.restore()` on the reply
+  yourself.
 - **Other endpoints:** only `chat.completions.create` is patched, so calls such
   as `client.responses.create` aren't scanned.
 
@@ -582,6 +601,7 @@ raises `ImportError` otherwise.
 |---|---|---|
 | `shield` | `Shield` | The configured `Shield` |
 | `prompt_field` | `str` | Top-level JSON key holding the prompt. Default: `"prompt"` |
+| `response_field` | `str \| None` | Top-level JSON response key holding the model output. Default: `None` (responses aren't scanned) |
 
 For a POST request with a JSON body containing `prompt_field`, the middleware
 masks that field and passes the request on. A blocked prompt returns `400`
@@ -601,3 +621,21 @@ this won't cover an OpenAI-style `messages` array.
 
 A request returns `500` if `prompt_field` holds a non-string value, or if the
 JSON body is an array that contains the field name.
+
+When `response_field` is set, every response is checked after the route handler
+runs, whether or not the request had a prompt. If the response is 2xx, has a
+JSON content type, and its body is an object whose `response_field` is a string,
+that field is scanned with `shield.scan_response` and masked in place. A blocked
+reply is replaced with a `502`:
+
+```json
+{
+  "error": "Blocked: sensitive data detected in response.",
+  "detail": "Sensitive data of type 'credit_card' was detected and blocked by the active policy. ...",
+  "code": "SENSITIVE_DATA_BLOCKED_RESPONSE"
+}
+```
+
+All other responses pass through unchanged, including error statuses, non-JSON
+responses such as `text/event-stream`, and JSON without a string field. A
+streamed response with a JSON content type is read in full before scanning.

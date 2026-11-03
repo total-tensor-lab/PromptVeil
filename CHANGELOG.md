@@ -6,6 +6,12 @@ All notable changes to PromptVeil are documented here.
 
 ### Added
 
+- `wrap_openai(..., scan_responses=True)` scans the content of every returned
+  choice with `Shield.scan_response`, for both `OpenAI` and `AsyncOpenAI`.
+  `stream=True` raises `ConfigurationError` in this mode.
+- `PromptVeilMiddleware(..., response_field="response")` scans that field of 2xx
+  JSON responses. Blocked replies return `502` with code
+  `SENSITIVE_DATA_BLOCKED_RESPONSE`.
 - Audit log events now include `scan_id`, `method`, per-entity `confidence`,
   and (for `prompt_scan`) `risk_score` and `risk_level`. `prompt_blocked` events
   also include `position` and `prompt_length`.
