@@ -4,6 +4,7 @@ import json
 
 import pytest
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.testclient import TestClient
 
 from promptveil import Shield
@@ -173,3 +174,86 @@ class TestMiddlewareBlock:
         client = make_app(rules=[Rule(type="credit_card", action=Action.BLOCK)])
         resp = client.post("/chat", json={"prompt": "Charge 4111-1111-1111-1111"})
         assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Response scanning
+# ---------------------------------------------------------------------------
+
+EMAIL = "alice@example.com"
+
+
+def make_response_app(response, rules=None, response_field="response") -> TestClient:
+    """App whose GET /reply returns *response*, with response scanning enabled."""
+    app = FastAPI()
+    shield = Shield(
+        config=PolicyConfig(
+            rules=rules or [Rule(type="email", action=Action.MASK)],
+        )
+    )
+    app.add_middleware(
+        PromptVeilMiddleware, shield=shield, response_field=response_field
+    )
+
+    @app.get("/reply")
+    async def reply():
+        return response
+
+    return TestClient(app, raise_server_exceptions=False)
+
+
+class TestMiddlewareResponse:
+    def test_response_field_masked(self):
+        client = make_response_app({"response": f"Mail {EMAIL}", "id": 1})
+        resp = client.get("/reply")
+        assert resp.status_code == 200
+        assert EMAIL not in resp.json()["response"]
+        assert resp.json()["id"] == 1
+        assert int(resp.headers["content-length"]) == len(resp.content)
+
+    def test_blocked_response_returns_502(self):
+        client = make_response_app(
+            {"response": "Card 4111-1111-1111-1111"},
+            rules=[Rule(type="credit_card", action=Action.BLOCK)],
+        )
+        resp = client.get("/reply")
+        assert resp.status_code == 502
+        body = resp.json()
+        assert body["code"] == "SENSITIVE_DATA_BLOCKED_RESPONSE"
+        assert body["error"] == "Blocked: sensitive data detected in response."
+        assert "detail" in body
+
+    def test_non_json_response_passes_through(self):
+        client = make_response_app(PlainTextResponse(f"Mail {EMAIL}"))
+        assert client.get("/reply").text == f"Mail {EMAIL}"
+
+    def test_non_2xx_response_untouched(self):
+        client = make_response_app(
+            JSONResponse(status_code=422, content={"response": EMAIL})
+        )
+        resp = client.get("/reply")
+        assert resp.status_code == 422
+        assert resp.json()["response"] == EMAIL
+
+    @pytest.mark.parametrize("body", [{"other": EMAIL}, {"response": 5}, [EMAIL]])
+    def test_unscannable_json_passes_through(self, body):
+        client = make_response_app(body)
+        assert client.get("/reply").json() == body
+
+    def test_default_does_not_scan_responses(self):
+        client = make_response_app({"response": EMAIL}, response_field=None)
+        assert client.get("/reply").json() == {"response": EMAIL}
+
+    def test_request_and_response_both_scanned(self):
+        app = FastAPI()
+        shield = Shield(config=PolicyConfig(rules=[Rule(type="email", action=Action.MASK)]))
+        app.add_middleware(PromptVeilMiddleware, shield=shield, response_field="response")
+
+        @app.post("/chat")
+        async def chat(body: dict):
+            return {"prompt_seen": body["prompt"], "response": f"Reply to {EMAIL}"}
+
+        client = TestClient(app, raise_server_exceptions=False)
+        resp = client.post("/chat", json={"prompt": f"I am {EMAIL}"})
+        assert EMAIL not in resp.json()["prompt_seen"]
+        assert EMAIL not in resp.json()["response"]
