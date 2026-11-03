@@ -17,6 +17,7 @@ const sidebars = {
       ],
     },
     'api-reference',
+    'benchmarks',
     'project-summary',
   ],
 };

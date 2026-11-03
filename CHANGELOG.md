@@ -2,6 +2,17 @@
 
 All notable changes to PromptVeil are documented here.
 
+## [Unreleased]
+
+### Added
+
+- Detection-accuracy benchmarks in `benchmarks/accuracy/`: precision, recall
+  and F1 per entity type on NVIDIA Nemotron-PII, Gretel synthetic PII (finance)
+  and the new in-repo PromptVeil-Bench v1. Run with
+  `python -m benchmarks.accuracy.run` after `pip install -e ".[bench]"`.
+  Results are published in `docs/benchmarks.md`.
+- `bench` optional extra (`datasets>=2.18`).
+
 ## [0.2.0] - 2026-11-03
 
 ### Added
