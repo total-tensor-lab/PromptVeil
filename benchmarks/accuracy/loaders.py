@@ -35,6 +35,9 @@ class LoadResult:
     samples: list[Sample]
     skipped_spans: int
     revision: str
+    # False when the dataset leaves some real PII unlabelled, so FP counts are
+    # not trustworthy and only recall is reported.
+    labels_complete: bool = True
 
 
 def _build_spans(
@@ -97,7 +100,11 @@ def _collect(rows: Iterable[Mapping[str, Any]], parse, revision: str) -> LoadRes
 
 def load_gretel() -> LoadResult:
     ds = _load_hf(GRETEL_REPO, GRETEL_FILE, GRETEL_REVISION)
-    return _collect(ds, parse_gretel_row, GRETEL_REVISION)
+    result = _collect(ds, parse_gretel_row, GRETEL_REVISION)
+    # Gretel labels only the PII types each document was generated for; e.g.
+    # 500 of 813 email addresses in the English test split carry no label.
+    result.labels_complete = False
+    return result
 
 
 def load_nemotron(limit: int = DEFAULT_LIMIT, seed: int = DEFAULT_SEED) -> LoadResult:

@@ -58,14 +58,17 @@ def evaluate(result: LoadResult, detectors: Sequence[BaseDetector]) -> dict[str,
         "samples": len(result.samples),
         "skipped_spans": result.skipped_spans,
         "revision": result.revision,
+        "labels_complete": result.labels_complete,
         "overlap": {k: _as_dict(v) for k, v in sorted(overlap_totals.items())},
         "strict": {k: _as_dict(v) for k, v in sorted(strict_totals.items())},
         "micro": {"overlap": _as_dict(micro(overlap_totals)), "strict": _as_dict(micro(strict_totals))},
     }
 
 
-def _row(name: str, c: Mapping[str, Any]) -> str:
+def _row(name: str, c: Mapping[str, Any], recall_only: bool = False) -> str:
     support = c["tp"] + c["fn"]
+    if recall_only:
+        return f"| {name} | {support} | {c['tp']} | n/a | {c['fn']} | n/a | {format_metric(c['recall'], support)} | n/a |"
     metrics = " | ".join(format_metric(c[m], support) for m in ("precision", "recall", "f1"))
     return f"| {name} | {support} | {c['tp']} | {c['fp']} | {c['fn']} | {metrics} |"
 
@@ -73,17 +76,26 @@ def _row(name: str, c: Mapping[str, Any]) -> str:
 def render_markdown(report: Mapping[str, Any]) -> str:
     lines = [f"PromptVeil {report['promptveil_version']} · run {report['date']} · overlap match"]
     for name, ds in report["datasets"].items():
+        recall_only = not ds.get("labels_complete", True)
         lines += [
             "",
             f"### {name}",
             "",
             f"{ds['samples']} samples · revision `{ds['revision']}` · {ds['skipped_spans']} misaligned gold spans skipped",
+        ]
+        if recall_only:
+            lines += ["", "_Labels are incomplete for this dataset, so results are recall only._"]
+        lines += [
             "",
             "| Type | Gold | TP | FP | FN | Precision | Recall | F1 |",
             "|---|---:|---:|---:|---:|---:|---:|---:|",
         ]
-        lines += [_row(t, c) for t, c in ds["overlap"].items()]
-        lines.append(_row("**Micro avg**", ds["micro"]["overlap"]))
+        lines += [
+            _row(t, c, recall_only)
+            for t, c in ds["overlap"].items()
+            if not (recall_only and c["tp"] + c["fn"] == 0)
+        ]
+        lines.append(_row("**Micro avg**", ds["micro"]["overlap"], recall_only))
     for name, err in report.get("errors", {}).items():
         lines += ["", f"### {name}", "", f"Failed to load: {err}"]
     return "\n".join(lines) + "\n"

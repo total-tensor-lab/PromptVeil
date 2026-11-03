@@ -76,3 +76,21 @@ def test_failed_dataset_exits_1(monkeypatch, tmp_path):
 def test_unknown_dataset_rejected():
     with pytest.raises(SystemExit):
         run.main(["--datasets", "nope"])
+
+
+def test_incomplete_labels_report_recall_only():
+    counts = {"tp": 30, "fp": 50, "fn": 0, "precision": 0.375, "recall": 1.0, "f1": 0.55}
+    ds = {
+        "samples": 10, "skipped_spans": 0, "revision": "abc", "labels_complete": False,
+        "overlap": {"email": counts}, "strict": {"email": counts},
+        "micro": {"overlap": counts, "strict": counts},
+    }
+    md = run.render_markdown({"promptveil_version": "0.2.0", "date": "2026-11-03", "datasets": {"gretel": ds}})
+    row = next(line for line in md.splitlines() if line.startswith("| email"))
+    assert row == "| email | 30 | 30 | n/a | 0 | n/a | 100.0% | n/a |"
+    assert "recall only" in md
+
+
+def test_evaluate_carries_labels_complete():
+    result = LoadResult([], 0, "rev", labels_complete=False)
+    assert run.evaluate(result, run.default_detectors())["labels_complete"] is False
