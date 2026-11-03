@@ -40,9 +40,11 @@ wrap_openai(client, shield, vault=None, scan_responses=False)
 - When `True`:
   - If `stream=True` is in the call kwargs, raise `ConfigurationError` **before**
     calling the API. Silently skipping the scan would be a false sense of safety.
-  - If the original `create` is a coroutine function
-    (`inspect.iscoroutinefunction`), install an `async def` wrapper that awaits it;
-    otherwise install a sync wrapper.
+  - If the result of the original `create` is awaitable (`inspect.isawaitable`),
+    return a coroutine that awaits it and then scans; otherwise scan directly.
+    The result is checked rather than the function because the real
+    `AsyncOpenAI` SDK wraps `create` in a sync decorator, so
+    `inspect.iscoroutinefunction` returns `False` for it.
   - After the call, for each `choice` in `response.choices`, if
     `choice.message.content` is a `str`, replace it with
     `shield.scan_response(content)`. Choices whose content is `None` (tool calls)

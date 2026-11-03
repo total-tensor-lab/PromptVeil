@@ -19,16 +19,27 @@ Usage::
         messages=[{"role": "user", "content": "My card is 4111-1111-1111-1111"}],
     )
     # ↑ raises SensitiveDataError (credit_card is blocked by default policy).
+
+Pass ``scan_responses=True`` to also scan the model's reply with
+:meth:`~promptveil.shield.Shield.scan_response`.
 """
 
-from typing import TYPE_CHECKING, List, Optional
+import inspect
+from typing import TYPE_CHECKING, Any, List, Optional
+
+from ..exceptions import ConfigurationError
 
 if TYPE_CHECKING:
     from ..shield import Shield
     from ..vault import PseudonymVault
 
 
-def wrap_openai(client, shield: "Shield", vault: Optional["PseudonymVault"] = None):
+def wrap_openai(
+    client,
+    shield: "Shield",
+    vault: Optional["PseudonymVault"] = None,
+    scan_responses: bool = False,
+):
     """
     Patch an OpenAI client's ``chat.completions.create`` method in-place to
     scan all message content via *shield* before each API call.
@@ -44,6 +55,10 @@ def wrap_openai(client, shield: "Shield", vault: Optional["PseudonymVault"] = No
         vault:   Optional :class:`~promptveil.vault.PseudonymVault` for
                  reversible pseudonymization.  When ``None``, standard
                  masking (irreversible) is used.
+        scan_responses: When ``True``, the string ``message.content`` of
+                 every returned choice is scanned with
+                 :meth:`~promptveil.shield.Shield.scan_response`. Streaming
+                 (``stream=True``) is not supported in this mode.
 
     Returns:
         The same *client* instance with its ``chat.completions.create``
@@ -51,6 +66,12 @@ def wrap_openai(client, shield: "Shield", vault: Optional["PseudonymVault"] = No
 
     Raises:
         ImportError: If the ``openai`` package is not installed.
+
+    The patched method raises
+    :class:`~promptveil.exceptions.ConfigurationError` when called with
+    ``stream=True`` while *scan_responses* is enabled, and
+    :class:`~promptveil.exceptions.SensitiveDataError` when a response
+    matches a ``block`` rule.
     """
     try:
         import openai as _openai  # noqa: F401
@@ -79,10 +100,36 @@ def wrap_openai(client, shield: "Shield", vault: Optional["PseudonymVault"] = No
                 scanned.append(msg)
         return scanned
 
-    def patched_create(*args, **kwargs):
+    def _prepare(kwargs: dict) -> None:
+        if scan_responses and kwargs.get("stream"):
+            raise ConfigurationError(
+                "scan_responses does not support stream=True; streamed "
+                "responses can't be scanned before they reach the caller."
+            )
         if "messages" in kwargs:
             kwargs["messages"] = _scan_messages(kwargs["messages"])
-        return original_create(*args, **kwargs)
+
+    def _scan_response(response: Any) -> Any:
+        for choice in getattr(response, "choices", None) or []:
+            message = getattr(choice, "message", None)
+            content = getattr(message, "content", None)
+            if isinstance(content, str):
+                message.content = shield.scan_response(content)
+        return response
+
+    def patched_create(*args, **kwargs):
+        _prepare(kwargs)
+        result = original_create(*args, **kwargs)
+        if not scan_responses:
+            return result
+        # AsyncOpenAI's create() is wrapped in a sync decorator that returns a
+        # coroutine, so check the result rather than the function.
+        if inspect.isawaitable(result):
+            async def _scan_awaited():
+                return _scan_response(await result)
+
+            return _scan_awaited()
+        return _scan_response(result)
 
     client.chat.completions.create = patched_create
     return client
