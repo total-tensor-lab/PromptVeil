@@ -66,3 +66,40 @@ def test_out_of_range_span_skipped():
     sample, skipped = parse_gretel_row(row)
     assert sample.spans == ()
     assert skipped == 1
+
+
+# ── PromptVeil-Bench v1 ───────────────────────────────────────────────────
+
+BENCH_TYPES = {
+    "email", "phone", "in_phone", "credit_card", "api_key", "ssn", "us_passport",
+    "us_ein", "in_aadhaar", "in_pan", "in_passport", "in_voter_id", "in_ifsc", "in_gstin",
+}
+
+
+def test_bench_spans_slice_text():
+    from benchmarks.accuracy.loaders import load_promptveil_bench
+
+    result = load_promptveil_bench()
+    assert result.skipped_spans == 0
+    for sample in result.samples:
+        for span in sample.spans:
+            assert 0 <= span.start < span.end <= len(sample.text)
+            assert span.label in BENCH_TYPES
+
+
+def test_bench_counts():
+    from collections import Counter
+
+    from benchmarks.accuracy.loaders import load_promptveil_bench
+
+    samples = load_promptveil_bench().samples
+    per_type = Counter(span.label for s in samples for span in s.spans)
+    assert per_type == {label: 50 for label in BENCH_TYPES}
+    assert sum(1 for s in samples if not s.spans) == 300
+
+
+def test_bench_is_reproducible():
+    from benchmarks.accuracy.generate_bench import generate, serialize
+    from benchmarks.accuracy.loaders import BENCH_PATH
+
+    assert serialize(generate()) == BENCH_PATH.read_text(encoding="utf-8")
