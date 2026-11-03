@@ -14,10 +14,12 @@ Then add the middleware to your app::
     app = FastAPI()
     shield = Shield(config_path="policy.yaml")
     app.add_middleware(PromptVeilMiddleware, shield=shield, prompt_field="prompt")
+
+Pass ``response_field="response"`` to also scan that field of JSON responses.
 """
 
 import json
-from typing import Callable
+from typing import Callable, Optional
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -42,11 +44,20 @@ class PromptVeilMiddleware(BaseHTTPMiddleware):
     * Non-JSON bodies, non-POST methods, or requests without the prompt field
       are forwarded unmodified.
 
+    When *response_field* is set, 2xx JSON object responses have that field
+    scanned with :meth:`~promptveil.shield.Shield.scan_response`. A masked
+    field is rewritten; a blocked one turns the response into a
+    ``502 Bad Gateway`` JSON error. Other responses (non-2xx, non-JSON, or
+    without a string *response_field*) pass through unchanged. Responses with
+    a JSON content type are read in full before scanning, even if streamed.
+
     Args:
         app: The ASGI application to wrap.
         shield: A configured :class:`~promptveil.shield.Shield` instance.
         prompt_field: The JSON body key that holds the prompt text.
             Defaults to ``"prompt"``.
+        response_field: The JSON response key that holds the model output.
+            Defaults to ``None`` (responses are not scanned).
     """
 
     def __init__(
@@ -54,13 +65,26 @@ class PromptVeilMiddleware(BaseHTTPMiddleware):
         app,
         shield: Shield,
         prompt_field: str = "prompt",
+        response_field: Optional[str] = None,
     ) -> None:
         super().__init__(app)
         self._shield = shield
         self._prompt_field = prompt_field
+        self._response_field = response_field
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
-        """Intercept the request, scan the prompt field, and forward or block."""
+        """Scan the request prompt, call the handler, then scan the response."""
+        blocked = await self._scan_request(request)
+        if blocked is not None:
+            return blocked
+
+        response = await call_next(request)
+        if self._response_field is None:
+            return response
+        return await self._scan_response(response)
+
+    async def _scan_request(self, request: Request) -> Optional[Response]:
+        """Mask the prompt field in place, or return a 400 response if blocked."""
         content_type = request.headers.get("content-type", "")
 
         if request.method == "POST" and "application/json" in content_type:
@@ -70,7 +94,7 @@ class PromptVeilMiddleware(BaseHTTPMiddleware):
             try:
                 body: dict = json.loads(raw_body)
             except (json.JSONDecodeError, UnicodeDecodeError):
-                return await call_next(request)
+                return None
 
             if self._prompt_field in body:
                 try:
@@ -98,4 +122,45 @@ class PromptVeilMiddleware(BaseHTTPMiddleware):
 
                 request._receive = _receive  # type: ignore[method-assign]
 
-        return await call_next(request)
+        return None
+
+    async def _scan_response(self, response: Response) -> Response:
+        """Scan *response_field* of a 2xx JSON response; 502 if blocked."""
+        content_type = response.headers.get("content-type", "")
+        if not (200 <= response.status_code < 300) or "application/json" not in content_type:
+            return response
+
+        raw_body = b"".join([chunk async for chunk in response.body_iterator])  # type: ignore[attr-defined]
+
+        try:
+            body = json.loads(raw_body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return self._rebuild(response, raw_body)
+
+        if not isinstance(body, dict) or not isinstance(body.get(self._response_field), str):
+            return self._rebuild(response, raw_body)
+
+        try:
+            body[self._response_field] = self._shield.scan_response(body[self._response_field])
+        except SensitiveDataError as exc:
+            return JSONResponse(
+                status_code=502,
+                content={
+                    "error": "Blocked: sensitive data detected in response.",
+                    "detail": str(exc),
+                    "code": "SENSITIVE_DATA_BLOCKED_RESPONSE",
+                },
+            )
+
+        return self._rebuild(response, json.dumps(body).encode("utf-8"))
+
+    @staticmethod
+    def _rebuild(response: Response, body: bytes) -> Response:
+        """Return a copy of *response* with *body*, keeping status and headers."""
+        new = Response(content=body, status_code=response.status_code, background=response.background)
+        # Copy raw headers so repeated ones (e.g. set-cookie) survive, and
+        # replace content-length to match the new body.
+        new.raw_headers = [
+            (k, v) for k, v in response.raw_headers if k.lower() != b"content-length"
+        ] + [(b"content-length", str(len(body)).encode("latin-1"))]
+        return new
