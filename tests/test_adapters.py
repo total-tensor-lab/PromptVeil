@@ -1,10 +1,15 @@
 """Tests for framework-native adapters (OpenAI and LangChain)."""
 
+import asyncio
+import sys
+import types
+from types import SimpleNamespace
+
 import pytest
 
 from promptveil import Shield
 from promptveil.adapters import get_langchain_callback, wrap_openai
-from promptveil.exceptions import SensitiveDataError
+from promptveil.exceptions import ConfigurationError, SensitiveDataError
 from promptveil.policy.models import Action, PolicyConfig, Rule
 
 
@@ -135,6 +140,130 @@ class TestWrapOpenAI:
             messages=[{"role": "user", "content": None}]
         )
         assert received[0]["content"] is None
+
+
+def _completion(*contents):
+    """Build a fake chat completion with one choice per content value."""
+    return SimpleNamespace(
+        choices=[SimpleNamespace(message=SimpleNamespace(content=c)) for c in contents]
+    )
+
+
+def make_client(response, is_async=False):
+    """Fake OpenAI client whose create() records calls and returns *response*."""
+    calls = []
+
+    if is_async:
+        class FakeCompletions:
+            async def create(self, **kwargs):
+                calls.append(kwargs)
+                return response
+    else:
+        class FakeCompletions:
+            def create(self, **kwargs):
+                calls.append(kwargs)
+                return response
+
+    class FakeChat:
+        completions = FakeCompletions()
+
+    class FakeClient:
+        chat = FakeChat()
+
+    sys.modules.setdefault("openai", types.ModuleType("openai"))
+    return FakeClient(), calls
+
+
+EMAIL_REPLY = "Contact alice@example.com for details"
+MESSAGES = [{"role": "user", "content": "hi"}]
+
+
+class TestWrapOpenAIResponses:
+    def test_response_masked_when_enabled(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY))
+        wrap_openai(client, shield=shield, scan_responses=True)
+        result = client.chat.completions.create(messages=MESSAGES)
+        assert "alice@example.com" not in result.choices[0].message.content
+
+    def test_response_unchanged_when_disabled(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY))
+        wrap_openai(client, shield=shield)
+        result = client.chat.completions.create(messages=MESSAGES)
+        assert result.choices[0].message.content == EMAIL_REPLY
+
+    def test_response_block_raises(self):
+        shield = make_shield(rules=[Rule(type="credit_card", action=Action.BLOCK)])
+        client, _ = make_client(_completion("Card 4111-1111-1111-1111"))
+        wrap_openai(client, shield=shield, scan_responses=True)
+        with pytest.raises(SensitiveDataError):
+            client.chat.completions.create(messages=MESSAGES)
+
+    def test_all_choices_scanned(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY, "or bob@example.com"))
+        wrap_openai(client, shield=shield, scan_responses=True)
+        result = client.chat.completions.create(messages=MESSAGES)
+        assert "alice@example.com" not in result.choices[0].message.content
+        assert "bob@example.com" not in result.choices[1].message.content
+
+    def test_none_content_skipped(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(None))
+        wrap_openai(client, shield=shield, scan_responses=True)
+        result = client.chat.completions.create(messages=MESSAGES)
+        assert result.choices[0].message.content is None
+
+    def test_response_without_choices_returned_as_is(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client({})
+        wrap_openai(client, shield=shield, scan_responses=True)
+        assert client.chat.completions.create(messages=MESSAGES) == {}
+
+    def test_stream_raises_configuration_error(self):
+        shield = make_shield()
+        client, calls = make_client(_completion(EMAIL_REPLY))
+        wrap_openai(client, shield=shield, scan_responses=True)
+        with pytest.raises(ConfigurationError, match="stream"):
+            client.chat.completions.create(messages=MESSAGES, stream=True)
+        assert not calls
+
+    def test_async_response_masked(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY), is_async=True)
+        wrap_openai(client, shield=shield, scan_responses=True)
+        result = asyncio.run(client.chat.completions.create(messages=MESSAGES))
+        assert "alice@example.com" not in result.choices[0].message.content
+
+    def test_async_response_masked_through_sync_decorator(self):
+        """The real SDK wraps async create() in a sync decorator returning a coroutine."""
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY), is_async=True)
+        async_create = client.chat.completions.create
+
+        def decorated(*args, **kwargs):
+            return async_create(*args, **kwargs)
+
+        client.chat.completions.create = decorated
+        wrap_openai(client, shield=shield, scan_responses=True)
+        result = asyncio.run(client.chat.completions.create(messages=MESSAGES))
+        assert "alice@example.com" not in result.choices[0].message.content
+
+    def test_async_stream_raises_configuration_error(self):
+        shield = make_shield()
+        client, calls = make_client(_completion(EMAIL_REPLY), is_async=True)
+        wrap_openai(client, shield=shield, scan_responses=True)
+        with pytest.raises(ConfigurationError, match="stream"):
+            asyncio.run(client.chat.completions.create(messages=MESSAGES, stream=True))
+        assert not calls
+
+    def test_async_disabled_returns_unscanned_response(self):
+        shield = make_shield(rules=[Rule(type="email", action=Action.MASK)])
+        client, _ = make_client(_completion(EMAIL_REPLY), is_async=True)
+        wrap_openai(client, shield=shield)
+        result = asyncio.run(client.chat.completions.create(messages=MESSAGES))
+        assert result.choices[0].message.content == EMAIL_REPLY
 
 
 # ── LangChain adapter ─────────────────────────────────────────────────────
