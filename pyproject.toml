@@ -48,6 +48,9 @@ openai = [
 langchain = [
     "langchain-core>=0.1.0",
 ]
+bench = [
+    "datasets>=2.18",
+]
 dev = [
     "pytest>=7.4",
     "pytest-benchmark>=4.0",
