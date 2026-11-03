@@ -99,10 +99,25 @@ def test_bench_counts():
 
 
 def test_bench_is_reproducible():
-    from benchmarks.accuracy.generate_bench import generate, serialize
-    from benchmarks.accuracy.loaders import BENCH_PATH
+    from benchmarks.accuracy.loaders import load_promptveil_bench
 
-    assert serialize(generate()) == BENCH_PATH.read_text(encoding="utf-8")
+    # Pinned so a generator change can't silently alter the published dataset.
+    assert load_promptveil_bench().revision == "b805cf48df92"
+
+
+def test_bench_generated_without_file(monkeypatch, tmp_path):
+    from benchmarks.accuracy import loaders
+
+    monkeypatch.setattr(loaders, "BENCH_PATH", tmp_path / "missing.jsonl")
+    assert len(loaders.load_promptveil_bench().samples) == 1000
+
+
+def test_bench_loads_from_explicit_file(tmp_path):
+    from benchmarks.accuracy.loaders import load_promptveil_bench
+
+    path = tmp_path / "bench.jsonl"
+    path.write_text(json.dumps({"id": "x", "text": "hi", "spans": []}) + "\n", encoding="utf-8")
+    assert [s.sample_id for s in load_promptveil_bench(path).samples] == ["x"]
 
 
 def test_gretel_labels_marked_incomplete(monkeypatch):
