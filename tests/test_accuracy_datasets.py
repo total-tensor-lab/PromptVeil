@@ -103,3 +103,11 @@ def test_bench_is_reproducible():
     from benchmarks.accuracy.loaders import BENCH_PATH
 
     assert serialize(generate()) == BENCH_PATH.read_text(encoding="utf-8")
+
+
+def test_gretel_labels_marked_incomplete(monkeypatch):
+    from benchmarks.accuracy import loaders
+
+    monkeypatch.setattr(loaders, "_load_hf", lambda *a: [])
+    assert loaders.load_gretel().labels_complete is False
+    assert loaders.load_promptveil_bench().labels_complete is True
