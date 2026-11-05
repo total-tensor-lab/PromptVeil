@@ -1,0 +1,48 @@
+name: Hugging Face Space
+
+# Syncs demo/huggingface/ to a Gradio Space.
+# Setup (once): create the Space on huggingface.co (SDK: Gradio), then add
+#   - repo secret   HF_TOKEN     (a write token for that Space)
+#   - repo variable HF_SPACE_ID  (e.g. total-tensor-lab/PromptVeil)
+
+on:
+  push:
+    branches: [master]
+    paths: ["demo/huggingface/**", ".github/workflows/hf-space.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hf-space
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: vars.HF_SPACE_ID != ''
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - run: pip install "huggingface_hub>=0.25"
+      - name: Upload demo to Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ vars.HF_SPACE_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          from huggingface_hub import HfApi
+
+          api = HfApi(token=os.environ["HF_TOKEN"])
+          api.upload_folder(
+              repo_id=os.environ["HF_SPACE_ID"],
+              repo_type="space",
+              folder_path="demo/huggingface",
+              commit_message=f"Sync from GitHub {os.environ['GITHUB_SHA'][:7]}",
+              delete_patterns=["*.py", "*.txt", "*.md"],
+          )
+          PY

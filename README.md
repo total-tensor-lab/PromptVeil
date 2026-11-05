@@ -56,6 +56,20 @@ pip install "promptveil[dev]"
 
 Requires **Python ≥ 3.10**.
 
+## Interactive demo
+
+A Gradio app in [`demo/huggingface/`](demo/huggingface) lets you try scanning,
+masking, blocking, compliance profiles, and vault pseudonymization in the browser.
+
+```bash
+pip install promptveil gradio
+python demo/huggingface/app.py   # http://localhost:7860
+```
+
+It is ready to host as a Hugging Face Space: create a Gradio Space, then set the
+`HF_TOKEN` secret and `HF_SPACE_ID` variable on this repo — the
+`Hugging Face Space` workflow syncs the folder on every push to `master`.
+
 ## Documentation
 
 - [Quickstart](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
