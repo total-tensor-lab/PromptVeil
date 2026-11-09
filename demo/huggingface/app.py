@@ -295,7 +295,7 @@ Privacy and safety middleware for LLM apps. Detect PII and secrets in a prompt
 **before** it reaches the model, then mask, block, or pseudonymize it by policy.
 `pip install promptveil` · v{promptveil.__version__} ·
 [GitHub](https://github.com/total-tensor-lab/PromptVeil) ·
-[Docs](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
+[Docs](https://www.totaltensorlab.com/PromptVeil/)
 
 </div>
 """

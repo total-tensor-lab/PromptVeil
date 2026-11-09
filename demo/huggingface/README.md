@@ -36,6 +36,8 @@ This Space lets you try it in the browser:
 
 Nothing you type is stored; each scan runs in memory.
 
+Full documentation: <https://www.totaltensorlab.com/PromptVeil/>
+
 ```bash
 pip install promptveil
 ```

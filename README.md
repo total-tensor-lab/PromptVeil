@@ -72,9 +72,9 @@ It is ready to host as a Hugging Face Space: create a Gradio Space, then set the
 
 ## Documentation
 
-- [Quickstart](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
-- [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
-- [Benchmarks](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/benchmarks.md)
+- [Quickstart](https://www.totaltensorlab.com/PromptVeil/quickstart)
+- [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference)
+- [Benchmarks](https://www.totaltensorlab.com/PromptVeil/benchmarks)
 - [Changelog](https://github.com/total-tensor-lab/PromptVeil/blob/master/CHANGELOG.md)
 - [Security policy](https://github.com/total-tensor-lab/PromptVeil/blob/master/SECURITY.md)
 - [Contributing](https://github.com/total-tensor-lab/PromptVeil/blob/master/CONTRIBUTING.md)
@@ -199,7 +199,7 @@ shield = Shield(config=profile.policy, detectors=profile.detectors)
 
 ## API Reference
 
-See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
+See the [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference)
 for the full public API.
 
 ---
@@ -287,7 +287,7 @@ chat_model.invoke(prompt, config={"callbacks": [callback]})
 Chat messages are masked in place, and `block` rules raise `SensitiveDataError`.
 String LLM prompts can't be masked by a callback, so they raise
 `SensitiveDataError` too. Call `shield.scan(prompt)` first to send a masked
-prompt. See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md#get_langchain_callback).
+prompt. See the [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference#get_langchain_callback).
 
 ---
 
