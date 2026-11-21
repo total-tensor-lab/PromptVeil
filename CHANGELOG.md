@@ -4,17 +4,29 @@ All notable changes to PromptVeil are documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-22
+
+The library API is unchanged from 0.2.0. This release adds a live demo,
+published accuracy benchmarks and contributor tooling.
+
 ### Added
 
 - Interactive demo in `demo/huggingface/`: an in-browser page (Pyodide, no
-  server) for a free Static Hugging Face Space, a Gradio app for local use, and
-  a Google Colab notebook in `demo/colab/`. A workflow syncs the Space on push.
+  server) hosted as a free Static Hugging Face Space, a Gradio app for local
+  use, and a Google Colab notebook in `demo/colab/`. A workflow syncs the Space
+  on push.
 - Detection-accuracy benchmarks in `benchmarks/accuracy/`: precision, recall
   and F1 per entity type on NVIDIA Nemotron-PII, Gretel synthetic PII (finance)
-  and the new in-repo PromptVeil-Bench v1. Run with
+  and the new PromptVeil-Bench v1, which is generated at run time. Run with
   `python -m benchmarks.accuracy.run` after `pip install -e ".[bench]"`.
   Results are published in `docs/benchmarks.md`.
 - `bench` optional extra (`datasets>=2.18`).
+- `ROADMAP.md`, plus issue templates for missing detectors / false negatives
+  and false positives.
+
+### Changed
+
+- `ruff` is now part of the `dev` extra, and CI runs `ruff check .`.
 
 ## [0.2.0] - 2026-11-03
 
