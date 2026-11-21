@@ -1,8 +1,20 @@
 # PromptVeil
 
-[![PyPI](https://img.shields.io/pypi/v/promptveil)](https://pypi.org/project/promptveil/)
+**Catch PII and secrets in prompts before they reach the LLM. Mask, block or allow them, with an audit log for compliance.**
 
-> Privacy and safety middleware for LLM applications.
+[![PyPI](https://img.shields.io/pypi/v/promptveil)](https://pypi.org/project/promptveil/)
+[![Tests](https://github.com/total-tensor-lab/PromptVeil/actions/workflows/ci.yml/badge.svg)](https://github.com/total-tensor-lab/PromptVeil/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/pypi/pyversions/promptveil)](https://pypi.org/project/promptveil/)
+
+**[▶ Try it live on Hugging Face](https://huggingface.co/spaces/total-tensor-lab/PromptVeil)** (runs in your browser, nothing to install) ·
+[Docs](https://www.totaltensorlab.com/PromptVeil/quickstart) ·
+[Roadmap](ROADMAP.md) ·
+[Discussions](https://github.com/total-tensor-lab/PromptVeil/discussions)
+
+<!-- TODO(launch): record the Hugging Face Space and save it as docs/assets/demo.gif, then replace this comment with:
+<p align="center"><img src="docs/assets/demo.gif" alt="PromptVeil masking an email and blocking a credit card in the live demo" width="720"></p>
+-->
 
 PromptVeil intercepts prompts **before** they reach an LLM API, detects
 sensitive information (PII, secrets), applies configurable policies
@@ -61,9 +73,9 @@ Requires **Python ≥ 3.10**.
 Try scanning, masking, blocking, compliance profiles, and vault pseudonymization
 without installing anything:
 
-- **In your browser:** [`demo/huggingface/index.html`](demo/huggingface/index.html)
+- **In your browser:** the [Hugging Face Space](https://huggingface.co/spaces/total-tensor-lab/PromptVeil)
   runs PromptVeil client-side with [Pyodide](https://pyodide.org), so prompts
-  never leave the page. It is hosted as a free Static Hugging Face Space.
+  never leave the page. Source: [`demo/huggingface/index.html`](demo/huggingface/index.html).
 - **In Google Colab:** the full Gradio app, with a temporary public link.
   [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/total-tensor-lab/PromptVeil/blob/master/demo/colab/promptveil_demo.ipynb)
 
@@ -86,6 +98,14 @@ To host the Space: create a **Static** Space on Hugging Face, then set the
 - [Changelog](https://github.com/total-tensor-lab/PromptVeil/blob/master/CHANGELOG.md)
 - [Security policy](https://github.com/total-tensor-lab/PromptVeil/blob/master/SECURITY.md)
 - [Contributing](https://github.com/total-tensor-lab/PromptVeil/blob/master/CONTRIBUTING.md)
+
+## Community
+
+- **Tell us what to detect next** in the [detector request thread](https://github.com/total-tensor-lab/PromptVeil/discussions/53).
+- **See what's planned** in the [roadmap](ROADMAP.md), and vote with 👍 on the items you need.
+- **Contribute a detector:** [good first issues](https://github.com/total-tensor-lab/PromptVeil/labels/good%20first%20issue)
+  cover HIPAA identifiers, EU national IDs and more, and each one explains what to build.
+- **Ask questions** in [Q&A](https://github.com/total-tensor-lab/PromptVeil/discussions/categories/q-a).
 
 ---
 

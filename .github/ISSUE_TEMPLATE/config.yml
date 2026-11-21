@@ -3,6 +3,15 @@ contact_links:
   - name: Report a security vulnerability
     url: https://github.com/total-tensor-lab/PromptVeil/security/advisories/new
     about: Report vulnerabilities privately. Do not open a public issue.
-  - name: Questions and support
+  - name: Ask a question
+    url: https://github.com/total-tensor-lab/PromptVeil/discussions/categories/q-a
+    about: Usage questions and help getting started.
+  - name: Request a detector or vote on requests
+    url: https://github.com/total-tensor-lab/PromptVeil/discussions/53
+    about: Tell us what sensitive data your LLM app sees.
+  - name: Share an idea
+    url: https://github.com/total-tensor-lab/PromptVeil/discussions/categories/ideas
+    about: Early-stage ideas that others can discuss and vote on.
+  - name: Email support
     url: mailto:oss@totaltensorlab.com
-    about: For general questions or support, email oss@totaltensorlab.com.
+    about: For anything that shouldn't be public, email oss@totaltensorlab.com.

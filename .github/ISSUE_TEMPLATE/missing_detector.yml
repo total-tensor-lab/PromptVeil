@@ -1,0 +1,78 @@
+name: Missing detector / false negative
+description: PromptVeil missed sensitive data, or should detect a new type of PII, ID or secret.
+title: "[Detector] "
+labels: ["detector", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping PromptVeil catch more. **Use made-up example values only.
+        Never paste real personal data, credentials or secrets.**
+
+        Not sure it's worth an issue yet? Ask in the
+        [detector request thread](https://github.com/total-tensor-lab/PromptVeil/discussions/53).
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What happened?
+      options:
+        - A type PromptVeil doesn't support yet (new detector)
+        - A supported type was missed (false negative)
+    validations:
+      required: true
+  - type: input
+    id: data_type
+    attributes:
+      label: Data type
+      description: The name of the ID, number or secret, and the country if it's regional.
+      placeholder: "Brazilian CPF"
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Made-up example
+      description: A fake but realistically formatted value, ideally inside a sentence like the ones your app sees.
+      placeholder: "Customer CPF is 123.456.789-09, please update the invoice."
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: format
+    attributes:
+      label: Format and validation rules
+      description: Length, separators, checksum algorithm, and a link to an official or reliable source if you have one.
+  - type: dropdown
+    id: regulation
+    attributes:
+      label: Related regulation
+      multiple: true
+      options:
+        - HIPAA
+        - GDPR / UK GDPR
+        - EU AI Act
+        - India DPDPA
+        - Canada PIPEDA
+        - Brazil LGPD
+        - Australia Privacy Act
+        - Singapore PDPA
+        - South Africa POPIA
+        - Mexico LFPDPPP
+        - Other / none
+  - type: textarea
+    id: context
+    attributes:
+      label: Where does it show up?
+      description: Support tickets, RAG documents, chat logs, source code, ...
+  - type: input
+    id: version
+    attributes:
+      label: PromptVeil version
+      description: Needed for false negatives.
+      placeholder: "0.2.0"
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to implement this detector myself.
