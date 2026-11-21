@@ -1,0 +1,62 @@
+name: False positive
+description: PromptVeil flagged text that isn't sensitive.
+title: "[False positive] "
+labels: ["bug", "detector"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. False positives break prompts, so they matter.
+        **Use made-up text only. Never paste real personal data, credentials or secrets.**
+  - type: input
+    id: version
+    attributes:
+      label: PromptVeil version
+      placeholder: "0.2.0"
+    validations:
+      required: true
+  - type: input
+    id: entity_type
+    attributes:
+      label: Entity type reported
+      description: The `entity_type` from the scan result or audit log.
+      placeholder: "us_ein"
+    validations:
+      required: true
+  - type: textarea
+    id: text
+    attributes:
+      label: Text that was flagged
+      description: A made-up input that reproduces the problem. Mark the part that was wrongly flagged.
+      placeholder: "Order 12-3456789 shipped today. (12-3456789 was flagged)"
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: what_it_is
+    attributes:
+      label: What the flagged text actually is
+      placeholder: "An internal order number, not an EIN."
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: Detectors, profile or policy used
+      placeholder: "profile: us_hipaa"
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - The prompt was blocked
+        - The text was masked and the prompt no longer made sense
+        - Noise in the audit log only
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Code to reproduce (optional)
+      render: python

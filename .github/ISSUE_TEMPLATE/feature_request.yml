@@ -1,7 +1,14 @@
 name: Feature request
-description: Suggest a new detector, integration, or improvement.
+description: Suggest an integration, compliance profile, policy option or other improvement.
 labels: ["enhancement"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Want a new type of PII, ID or secret detected? Use **Missing detector / false negative** instead.
+        Early-stage ideas are also welcome in
+        [Ideas Discussions](https://github.com/total-tensor-lab/PromptVeil/discussions/categories/ideas),
+        where others can vote on them.
   - type: textarea
     id: problem
     attributes:
@@ -19,6 +26,17 @@ body:
     id: alternatives
     attributes:
       label: Alternatives considered
+  - type: dropdown
+    id: regulation
+    attributes:
+      label: Related regulation
+      multiple: true
+      options:
+        - HIPAA
+        - GDPR / UK GDPR
+        - EU AI Act
+        - India DPDPA
+        - Other / none
   - type: markdown
     attributes:
       value: Please use synthetic examples only. Do not paste real personal data.
