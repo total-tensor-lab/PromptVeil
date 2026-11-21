@@ -1,6 +1,5 @@
 """Tests for the policy engine and models."""
 
-import pytest
 
 from promptveil.detector.base import DetectedEntity
 from promptveil.policy.engine import PolicyEngine

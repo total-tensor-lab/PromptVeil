@@ -58,7 +58,21 @@ dev = [
     "fastapi>=0.100.0",
     "starlette>=0.27.0",
     "httpx>=0.24.0",
+    "ruff>=0.14",
 ]
+
+[tool.ruff]
+target-version = "py310"
+extend-exclude = ["website"]
+
+[tool.ruff.lint]
+# Pinned so ruff upgrades don't silently change which rules CI enforces.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+# These scripts put the repo root on sys.path before importing project modules.
+"benchmarks/accuracy/run.py" = ["E402"]
+"benchmarks/run_benchmarks.py" = ["E402"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -20,9 +20,10 @@ python -m pip install -e ".[dev]"
 
 ## Checks before opening a change
 
-Run the test suite and coverage locally:
+Run the linter, the test suite and coverage locally (CI requires 90% coverage):
 
 ```bash
+uv run --extra dev ruff check .
 uv run --extra dev pytest tests/ -q
 uv run --extra dev pytest tests/ --cov=promptveil --cov-branch --cov-report=term-missing
 ```

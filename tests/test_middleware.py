@@ -1,6 +1,5 @@
 """Tests for PromptVeilMiddleware (FastAPI/Starlette integration)."""
 
-import json
 
 import pytest
 from fastapi import FastAPI

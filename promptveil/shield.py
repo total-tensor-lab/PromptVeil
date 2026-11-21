@@ -18,7 +18,7 @@ from .actions.masker import apply_masks, mask_value
 from .config.loader import load_config_with_profile
 from .detector.base import BaseDetector, DetectedEntity
 from .detector.regex_detector import RegexDetector, _resolve_overlaps
-from .exceptions import ConfigurationError, SensitiveDataError
+from .exceptions import ConfigurationError
 from .logger.audit_logger import AuditLogger
 from .policy.engine import PolicyEngine
 from .policy.models import Action, PolicyConfig

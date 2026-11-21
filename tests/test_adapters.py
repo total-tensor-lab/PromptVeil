@@ -79,7 +79,8 @@ class TestWrapOpenAI:
         class FakeClient:
             chat = FakeChat()
 
-        import sys, types
+        import sys
+        import types
         sys.modules.setdefault("openai", types.ModuleType("openai"))
 
         client = FakeClient()
@@ -104,7 +105,8 @@ class TestWrapOpenAI:
         class FakeClient:
             chat = FakeChat()
 
-        import sys, types
+        import sys
+        import types
         sys.modules.setdefault("openai", types.ModuleType("openai"))
 
         client = FakeClient()
@@ -130,7 +132,8 @@ class TestWrapOpenAI:
         class FakeClient:
             chat = FakeChat()
 
-        import sys, types
+        import sys
+        import types
         sys.modules.setdefault("openai", types.ModuleType("openai"))
 
         client = FakeClient()

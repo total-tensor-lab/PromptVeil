@@ -1,6 +1,5 @@
 """Tests for masking logic."""
 
-import pytest
 
 from promptveil.actions.masker import apply_masks, mask_value
 from promptveil.detector.base import DetectedEntity
