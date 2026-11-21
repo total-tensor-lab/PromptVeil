@@ -29,7 +29,6 @@ classifiers = [
 ]
 
 dependencies = [
-    "gradio>=6.31.0",
     "PyYAML>=6.0",
 ]
 
