@@ -32,7 +32,8 @@ sensitive information (PII, secrets), applies configurable policies
 | **Policy engine** | YAML-driven rules: `mask`, `block`, `allow`; per-rule confidence thresholds |
 | **Masking** | Type-aware redaction (domain preserved for email, last-4 for cards) |
 | **Blocking** | Raises `SensitiveDataError` before the prompt is forwarded |
-| **Audit logging** | Structured JSON lines — raw values never logged |
+| **Response scanning** | `scan_response()` sanitises LLM output; the OpenAI adapter and FastAPI middleware can scan replies too |
+| **Audit logging** | Structured JSON lines with `scan_id`, confidence and risk score — raw values never logged |
 | **Confidence scoring** | Each detected entity carries a `confidence` float; rules can require a minimum |
 | **Rich scan results** | `scan_detailed()` returns `ScanResult` with `risk_score`, `risk_level`, and per-entity `EntityResult` |
 | **Compliance profiles** | One-line activation of `india_dpdpa`, `eu_gdpr`, or `us_hipaa` rule packs |
@@ -41,6 +42,7 @@ sensitive information (PII, secrets), applies configurable policies
 | **LangChain adapter** | `get_langchain_callback()` returns a `BaseCallbackHandler` that scans prompts automatically |
 | **Plug-in detectors** | Subclass `BaseDetector` to add spaCy, ML models, custom patterns |
 | **FastAPI middleware** | Drop-in Starlette/FastAPI middleware (optional extra) |
+| **Published accuracy** | Precision, recall and F1 per entity type on public datasets ([benchmarks](https://www.totaltensorlab.com/PromptVeil/benchmarks)) |
 
 ---
 
@@ -59,10 +61,13 @@ pip install "promptveil[openai]"
 # With LangChain adapter
 pip install "promptveil[langchain]"
 
-# Everything
-pip install "promptveil[fastapi,openai,langchain,dev]"
+# Accuracy benchmarks (Hugging Face datasets)
+pip install "promptveil[bench]"
 
-# Development (includes pytest)
+# Everything
+pip install "promptveil[fastapi,openai,langchain,bench,dev]"
+
+# Development (includes pytest and ruff)
 pip install "promptveil[dev]"
 ```
 
@@ -170,6 +175,30 @@ client.chat.completions.create(
     model="gpt-4o",
     messages=[{"role": "user", "content": prompt}],
 )
+```
+
+Pass `scan_responses=True` to also scan every returned choice with
+`shield.scan_response()` (works with `OpenAI` and `AsyncOpenAI`; streaming is
+not supported in this mode).
+
+---
+
+## Accuracy
+
+PromptVeil publishes precision, recall and F1 per entity type. Highlights:
+
+- **Email: 99.5% F1** and **credit cards: 96.0% F1** on NVIDIA Nemotron-PII.
+- **India IDs: 95.0% recall at 99.3% precision** on PromptVeil-Bench.
+- **Overall on Nemotron-PII: 89.6% recall, 69.9% precision.** SSN and phone
+  patterns cause most false positives.
+
+Detection is regex and checksum based, so names, addresses and other
+free-text PII are out of scope. Full results, limitations and how to reproduce
+them are in the [benchmarks page](https://www.totaltensorlab.com/PromptVeil/benchmarks):
+
+```bash
+pip install -e ".[bench]"
+python -m benchmarks.accuracy.run
 ```
 
 ---
@@ -299,6 +328,10 @@ POST requests with `Content-Type: application/json` that contain the
 `prompt_field` key are intercepted automatically. Blocked prompts receive a
 `400` response with a structured error body.
 
+Pass `response_field="response"` to also scan that field of 2xx JSON
+responses. Blocked replies return `502` with code
+`SENSITIVE_DATA_BLOCKED_RESPONSE`.
+
 ---
 
 ## LangChain Adapter
@@ -326,19 +359,28 @@ Each log line is a self-contained JSON object:
 ```json
 {
   "event": "prompt_scan",
-  "timestamp": "2026-05-03T07:34:19.800456+00:00",
-  "prompt_length": 44,
+  "timestamp": "2026-11-21T20:37:03.689005+00:00",
+  "prompt_length": 42,
   "detections": 1,
   "entities": [
     {
       "entity_type": "email",
       "action": "mask",
       "value_preview": "a***@example.com",
-      "position": {"start": 26, "end": 43}
+      "confidence": 1.0,
+      "position": {"start": 8, "end": 25}
     }
-  ]
+  ],
+  "scan_id": "11b5750eed904b6bafd146d8a4866d9b",
+  "method": "scan",
+  "risk_score": 0.4,
+  "risk_level": "MEDIUM"
 }
 ```
+
+`scan_id` ties together every event from one call, and `method` records which
+`Shield` method produced it. Blocked prompts emit a `prompt_blocked` event with
+the entity type, confidence, position and prompt length.
 
 Raw sensitive values are **never** stored in logs.
 
@@ -348,24 +390,34 @@ Raw sensitive values are **never** stored in logs.
 
 ```
 promptveil/
-├── __init__.py             # Public API: Shield, exceptions
+├── __init__.py             # Public API: Shield, PseudonymVault, exceptions
 ├── shield.py               # Main Shield class — orchestration
+├── results.py              # ScanResult / EntityResult (scan_detailed)
+├── vault.py                # PseudonymVault — reversible <TYPE_N> tokens
 ├── exceptions.py           # SensitiveDataError, ConfigurationError
 ├── config/
-│   └── loader.py           # YAML loader & validator
+│   └── loader.py           # YAML loader & validator (incl. `profile:` key)
 ├── detector/
 │   ├── base.py             # BaseDetector ABC + DetectedEntity dataclass
-│   └── regex_detector.py   # Built-in regex patterns (email/phone/card/key)
+│   ├── regex_detector.py   # Built-in regex patterns (email/phone/card/key)
+│   ├── india_detector.py   # Aadhaar, PAN, GSTIN, IFSC, passport, voter ID
+│   └── us_detector.py      # SSN, US passport, EIN
 ├── policy/
 │   ├── models.py           # Action enum, Rule, PolicyConfig dataclasses
 │   └── engine.py           # PolicyEngine — entity → action lookup
+├── profiles/               # india_dpdpa, eu_gdpr, us_hipaa rule packs
 ├── actions/
 │   ├── masker.py           # Per-type masking + apply_masks()
 │   └── blocker.py          # block() — raises SensitiveDataError
+├── adapters/
+│   ├── openai_adapter.py   # wrap_openai()
+│   └── langchain_adapter.py  # get_langchain_callback()
 ├── logger/
 │   └── audit_logger.py     # Structured JSON audit logger
 └── middleware/
     └── fastapi_middleware.py  # Optional Starlette/FastAPI middleware
+benchmarks/accuracy/        # Precision/recall/F1 benchmark runner
+demo/                       # Hugging Face Space, Gradio app, Colab notebook
 policy.yaml                 # Example policy (mask email/phone, block card/key)
 example_usage.py            # Runnable demo
 ```
@@ -377,6 +429,7 @@ example_usage.py            # Runnable demo
 ```bash
 uv run pytest -v
 # or: python -m pytest -v
+uv run ruff check .   # lint, as run in CI
 ```
 
-234 tests, < 1 s.
+300+ tests, < 1 s.
