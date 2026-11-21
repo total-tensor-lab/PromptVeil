@@ -31,7 +31,13 @@ This Space lets you try it in the browser:
 - **Pseudonymize & restore** — swap PII for reversible `<EMAIL_1>`-style
   tokens, "send" them to an LLM, and restore the originals in the reply.
 - **Policy** — pick a compliance profile (`india_dpdpa`, `eu_gdpr`,
-  `us_hipaa`) or edit the policy YAML yourself.
+  `us_hipaa`), toggle detectors, or edit the policy YAML yourself.
+- **Examples & code** — one-click example prompts, and a snippet showing the
+  same setup in your own code.
+
+The Space runs PromptVeil 0.3.0 from PyPI. Detection is regex and checksum
+based; see the [accuracy benchmarks](https://www.totaltensorlab.com/PromptVeil/benchmarks)
+for precision and recall per entity type.
 
 **Your text never leaves your browser.** The page runs PromptVeil in Python
 via [Pyodide](https://pyodide.org) — there is no server. The first visit
