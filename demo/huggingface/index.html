@@ -67,6 +67,11 @@
   .stack > * + * { margin-top: 12px; }
   #status { color: var(--muted); }
   #status.ready { color: #16a34a; }
+  .install { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: -10px 0 20px; color: var(--muted); }
+  .pill { display: inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 600;
+          border: 1px solid var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+  code.pill { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9rem; }
+  .pill.ver { font-size: 0.8rem; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 </style>
 </head>
@@ -75,7 +80,10 @@
   <h1>🛡️ PromptVeil</h1>
   <p class="sub">
     Detect PII and secrets in a prompt <b>before</b> it reaches the model, then mask, block, or pseudonymize it by policy.
-    <code>pip install promptveil</code> · <span id="ver">v…</span> ·
+  </p>
+  <p class="install">
+    <code class="pill">pip install promptveil</code>
+    <span class="pill ver" id="ver">v…</span>
     <a href="https://github.com/total-tensor-lab/PromptVeil">GitHub</a> ·
     <a href="https://www.totaltensorlab.com/PromptVeil/">Docs</a>
   </p>
@@ -287,7 +295,7 @@ async function main() {
     cfg = JSON.parse(core.config_json());
     wireUi();
     ["scan-btn", "pseudo-btn"].forEach((id) => ($(id).disabled = false));
-    $("status").textContent = "✅ Ready — PromptVeil is running in your browser.";
+    $("status").textContent = "✅ Ready";
     $("status").className = "ready";
     runScan();
   } catch (err) {
