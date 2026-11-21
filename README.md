@@ -58,17 +58,25 @@ Requires **Python ≥ 3.10**.
 
 ## Interactive demo
 
-A Gradio app in [`demo/huggingface/`](demo/huggingface) lets you try scanning,
-masking, blocking, compliance profiles, and vault pseudonymization in the browser.
+Try scanning, masking, blocking, compliance profiles, and vault pseudonymization
+without installing anything:
+
+- **In your browser:** [`demo/huggingface/index.html`](demo/huggingface/index.html)
+  runs PromptVeil client-side with [Pyodide](https://pyodide.org), so prompts
+  never leave the page. It is hosted as a free Static Hugging Face Space.
+- **In Google Colab:** the full Gradio app, with a temporary public link.
+  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/total-tensor-lab/PromptVeil/blob/master/demo/colab/promptveil_demo.ipynb)
+
+Or run the Gradio app locally:
 
 ```bash
 pip install promptveil gradio
 python demo/huggingface/app.py   # http://localhost:7860
 ```
 
-It is ready to host as a Hugging Face Space: create a Gradio Space, then set the
+To host the Space: create a **Static** Space on Hugging Face, then set the
 `HF_TOKEN` secret and `HF_SPACE_ID` variable on this repo — the
-`Hugging Face Space` workflow syncs the folder on every push to `master`.
+`Hugging Face Space` workflow syncs `demo/huggingface/` on every push to `master`.
 
 ## Documentation
 

@@ -1,7 +1,8 @@
 name: Hugging Face Space
 
-# Syncs demo/huggingface/ to a Gradio Space.
-# Setup (once): create the Space on huggingface.co (SDK: Gradio), then add
+# Syncs demo/huggingface/ to a Static Space. index.html runs PromptVeil in the
+# visitor's browser with Pyodide, so the free Static tier is enough.
+# Setup (once): create the Space on huggingface.co (SDK: Static, Blank), then add
 #   - repo secret   HF_TOKEN     (a write token for that Space)
 #   - repo variable HF_SPACE_ID  (e.g. total-tensor-lab/PromptVeil)
 
@@ -43,6 +44,6 @@ jobs:
               repo_type="space",
               folder_path="demo/huggingface",
               commit_message=f"Sync from GitHub {os.environ['GITHUB_SHA'][:7]}",
-              delete_patterns=["*.py", "*.txt", "*.md"],
+              delete_patterns=["*.py", "*.txt", "*.md", "*.html", "*.css"],
           )
           PY

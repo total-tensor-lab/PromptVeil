@@ -3,9 +3,8 @@ title: PromptVeil
 emoji: 🛡️
 colorFrom: indigo
 colorTo: gray
-sdk: gradio
-sdk_version: 6.31.0
-app_file: app.py
+sdk: static
+app_file: index.html
 pinned: false
 license: mit
 short_description: Mask, block, or pseudonymize PII before it reaches an LLM
@@ -34,7 +33,12 @@ This Space lets you try it in the browser:
 - **Policy** — pick a compliance profile (`india_dpdpa`, `eu_gdpr`,
   `us_hipaa`) or edit the policy YAML yourself.
 
-Nothing you type is stored; each scan runs in memory.
+**Your text never leaves your browser.** The page runs PromptVeil in Python
+via [Pyodide](https://pyodide.org) — there is no server. The first visit
+downloads about 10 MB; after that it is cached.
+
+Prefer the full Gradio app?
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/total-tensor-lab/PromptVeil/blob/master/demo/colab/promptveil_demo.ipynb)
 
 Full documentation: <https://www.totaltensorlab.com/PromptVeil/>
 

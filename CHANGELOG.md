@@ -6,8 +6,9 @@ All notable changes to PromptVeil are documented here.
 
 ### Added
 
-- Interactive Gradio demo in `demo/huggingface/`, ready to host as a
-  Hugging Face Space, plus a workflow that syncs it to the Space on push.
+- Interactive demo in `demo/huggingface/`: an in-browser page (Pyodide, no
+  server) for a free Static Hugging Face Space, a Gradio app for local use, and
+  a Google Colab notebook in `demo/colab/`. A workflow syncs the Space on push.
 - Detection-accuracy benchmarks in `benchmarks/accuracy/`: precision, recall
   and F1 per entity type on NVIDIA Nemotron-PII, Gretel synthetic PII (finance)
   and the new in-repo PromptVeil-Bench v1. Run with
