@@ -56,11 +56,33 @@ pip install "promptveil[dev]"
 
 Requires **Python ≥ 3.10**.
 
+## Interactive demo
+
+Try scanning, masking, blocking, compliance profiles, and vault pseudonymization
+without installing anything:
+
+- **In your browser:** [`demo/huggingface/index.html`](demo/huggingface/index.html)
+  runs PromptVeil client-side with [Pyodide](https://pyodide.org), so prompts
+  never leave the page. It is hosted as a free Static Hugging Face Space.
+- **In Google Colab:** the full Gradio app, with a temporary public link.
+  [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/total-tensor-lab/PromptVeil/blob/master/demo/colab/promptveil_demo.ipynb)
+
+Or run the Gradio app locally:
+
+```bash
+pip install promptveil gradio
+python demo/huggingface/app.py   # http://localhost:7860
+```
+
+To host the Space: create a **Static** Space on Hugging Face, then set the
+`HF_TOKEN` secret and `HF_SPACE_ID` variable on this repo — the
+`Hugging Face Space` workflow syncs `demo/huggingface/` on every push to `master`.
+
 ## Documentation
 
-- [Quickstart](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/quickstart.md)
-- [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
-- [Benchmarks](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/benchmarks.md)
+- [Quickstart](https://www.totaltensorlab.com/PromptVeil/quickstart)
+- [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference)
+- [Benchmarks](https://www.totaltensorlab.com/PromptVeil/benchmarks)
 - [Changelog](https://github.com/total-tensor-lab/PromptVeil/blob/master/CHANGELOG.md)
 - [Security policy](https://github.com/total-tensor-lab/PromptVeil/blob/master/SECURITY.md)
 - [Contributing](https://github.com/total-tensor-lab/PromptVeil/blob/master/CONTRIBUTING.md)
@@ -185,7 +207,7 @@ shield = Shield(config=profile.policy, detectors=profile.detectors)
 
 ## API Reference
 
-See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md)
+See the [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference)
 for the full public API.
 
 ---
@@ -273,7 +295,7 @@ chat_model.invoke(prompt, config={"callbacks": [callback]})
 Chat messages are masked in place, and `block` rules raise `SensitiveDataError`.
 String LLM prompts can't be masked by a callback, so they raise
 `SensitiveDataError` too. Call `shield.scan(prompt)` first to send a masked
-prompt. See the [API reference](https://github.com/total-tensor-lab/PromptVeil/blob/master/docs/api-reference.md#get_langchain_callback).
+prompt. See the [API reference](https://www.totaltensorlab.com/PromptVeil/api-reference#get_langchain_callback).
 
 ---
 

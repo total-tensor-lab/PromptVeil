@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PromptVeil Playground</title>
+<meta name="description" content="Try PromptVeil in your browser: detect PII and secrets in a prompt, then mask, block, or pseudonymize them. Runs entirely client-side." />
+<!--
+  Static Hugging Face Space. Python runs in the visitor's browser via Pyodide:
+  this page installs promptveil from PyPI with micropip and loads core.py (the
+  same logic the Gradio app.py uses). Nothing is sent to a server.
+  Keep PROMPTVEIL_PIN in sync with requirements.txt.
+-->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.3/full/pyodide.js"></script>
+<style>
+  :root {
+    --bg: #f8fafc; --panel: #ffffff; --text: #0f172a; --muted: #64748b;
+    --border: #e2e8f0; --accent: #4f46e5; --accent-text: #ffffff; --code: #f1f5f9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1020; --panel: #121a2e; --text: #e2e8f0; --muted: #94a3b8;
+      --border: #24304a; --accent: #818cf8; --accent-text: #0b1020; --code: #0d1426;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1020; --panel: #121a2e; --text: #e2e8f0; --muted: #94a3b8;
+    --border: #24304a; --accent: #818cf8; --accent-text: #0b1020; --code: #0d1426;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { margin: 0 0 4px; font-size: 1.8rem; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  a { color: var(--accent); }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; }
+  @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+  label.h { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 6px; color: var(--muted); }
+  textarea, select { width: 100%; background: var(--code); color: var(--text); border: 1px solid var(--border);
+                     border-radius: 8px; padding: 10px; font: inherit; }
+  textarea.mono, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem; }
+  .checks label { display: block; margin: 4px 0; }
+  button { font: inherit; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+           border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  details > summary { cursor: pointer; font-weight: 600; }
+  details[open] > summary { margin-bottom: 10px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .tabs button[aria-selected="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .verdict { padding: 10px 14px; border-radius: 8px; background: var(--code); border-left: 6px solid var(--muted); margin: 12px 0; }
+  .verdict b.title { font-size: 1.15rem; display: block; }
+  .hl { white-space: pre-wrap; word-break: break-word; background: var(--code); border-radius: 8px; padding: 12px; line-height: 2; }
+  .ent { border-radius: 4px; padding: 2px 4px; }
+  .ent small { font-size: 0.7rem; font-weight: 700; margin-left: 4px; opacity: 0.9; }
+  .out { white-space: pre-wrap; word-break: break-word; background: var(--code); border-radius: 8px; padding: 10px; min-height: 2.6em; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; }
+  .table-wrap { overflow-x: auto; }
+  pre { background: var(--code); border-radius: 8px; padding: 12px; overflow-x: auto; margin: 0; }
+  .examples button { display: block; width: 100%; text-align: left; margin: 6px 0; }
+  .examples small { color: var(--muted); margin-left: 6px; }
+  .error { color: #dc2626; font-weight: 600; }
+  .stack > * + * { margin-top: 12px; }
+  #status { color: var(--muted); }
+  #status.ready { color: #16a34a; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🛡️ PromptVeil</h1>
+  <p class="sub">
+    Detect PII and secrets in a prompt <b>before</b> it reaches the model, then mask, block, or pseudonymize it by policy.
+    <code>pip install promptveil</code> · <span id="ver">v…</span> ·
+    <a href="https://github.com/total-tensor-lab/PromptVeil">GitHub</a> ·
+    <a href="https://www.totaltensorlab.com/PromptVeil/">Docs</a>
+  </p>
+
+  <div class="panel row">
+    <span id="status">⏳ Loading Python in your browser (first visit downloads ~10&nbsp;MB)…</span>
+    <span style="margin-left:auto;color:var(--muted);font-size:0.85rem">🔒 Runs locally — nothing you type leaves this page.</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <label class="h" for="prompt">Prompt</label>
+      <textarea id="prompt" rows="6" placeholder="Paste a prompt containing emails, phone numbers, cards, API keys, Aadhaar, SSN…"></textarea>
+    </div>
+    <div class="panel stack">
+      <div>
+        <label class="h" for="preset">Policy preset</label>
+        <select id="preset"></select>
+      </div>
+      <div>
+        <span class="h" style="display:block;font-weight:600;font-size:.85rem;color:var(--muted)">Detectors</span>
+        <div id="detectors" class="checks"></div>
+      </div>
+    </div>
+  </div>
+
+  <details class="panel">
+    <summary>Policy YAML (editable)</summary>
+    <textarea id="policy" class="mono" rows="14" spellcheck="false"></textarea>
+  </details>
+
+  <div class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="scan">🔍 Scan</button>
+      <button role="tab" aria-selected="false" data-tab="pseudo">🔁 Pseudonymize &amp; restore</button>
+    </div>
+
+    <section id="tab-scan" class="stack">
+      <button id="scan-btn" class="primary" disabled>Scan prompt</button>
+      <div id="scan-error" class="error" hidden></div>
+      <div id="verdict" class="verdict" hidden></div>
+      <div>
+        <label class="h">Detected entities</label>
+        <div id="highlight" class="hl"></div>
+      </div>
+      <div>
+        <label class="h">What the LLM receives</label>
+        <div id="safe" class="out"></div>
+      </div>
+      <div class="table-wrap">
+        <label class="h">Entities</label>
+        <table><thead><tr><th>type</th><th>action</th><th>start</th><th>end</th><th>confidence</th></tr></thead>
+          <tbody id="entities"></tbody></table>
+      </div>
+      <details>
+        <summary>Audit log (JSON lines — raw values never logged)</summary>
+        <pre id="audit"></pre>
+      </details>
+    </section>
+
+    <section id="tab-pseudo" class="stack" hidden>
+      <p style="margin:0">Replace PII with reversible tokens, let the LLM work on the tokens, then restore the original
+        values in its reply — the model never sees the raw data.</p>
+      <button id="pseudo-btn" class="primary" disabled>1 · Pseudonymize prompt</button>
+      <div id="pseudo-error" class="error" hidden></div>
+      <div>
+        <label class="h">Sent to the LLM</label>
+        <div id="pseudo-text" class="out"></div>
+      </div>
+      <div class="table-wrap">
+        <label class="h">Vault (kept on your side)</label>
+        <table><thead><tr><th>token</th><th>original</th></tr></thead><tbody id="tokens"></tbody></table>
+      </div>
+      <div>
+        <label class="h" for="reply">2 · LLM reply (edit to simulate one)</label>
+        <textarea id="reply" rows="3"></textarea>
+      </div>
+      <button id="restore-btn" disabled>3 · Restore originals</button>
+      <div>
+        <label class="h">Reply shown to the user</label>
+        <div id="restored" class="out"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="panel examples">
+    <label class="h">Try an example</label>
+    <div id="examples"></div>
+  </div>
+
+  <details class="panel">
+    <summary>Use it in your code</summary>
+    <pre id="snippet"></pre>
+  </details>
+</main>
+
+<script>
+const PROMPTVEIL_PIN = "promptveil==0.2.0";
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let core, cfg;
+
+function selectedDetectors() {
+  return JSON.stringify([...document.querySelectorAll("#detectors input:checked")].map((i) => i.value));
+}
+function applyPreset(name) {
+  const p = cfg.presets[name];
+  $("preset").value = name;
+  $("policy").value = p.policy;
+  document.querySelectorAll("#detectors input").forEach((i) => (i.checked = p.detectors.includes(i.value)));
+}
+function call(fn, ...args) {
+  return JSON.parse(core[fn](...args));
+}
+function showError(id, msg) {
+  $(id).hidden = !msg;
+  $(id).textContent = msg || "";
+}
+
+function runScan() {
+  const r = call("scan_json", $("prompt").value, $("policy").value, selectedDetectors());
+  showError("scan-error", r.ok ? "" : r.error);
+  if (!r.ok) return;
+  const v = $("verdict");
+  let color, title, sub;
+  if (r.blocked) {
+    color = "#dc2626"; title = "Blocked";
+    sub = `Prompt was <b>not</b> forwarded — policy blocks <code>${esc(r.blocked)}</code>.`;
+  } else {
+    [color, title] = cfg.risk[r.level] || ["#64748b", r.level];
+    sub = `Risk score <b>${r.score.toFixed(2)}</b> · level <b>${esc(r.level)}</b>`;
+  }
+  v.hidden = false;
+  v.style.borderLeftColor = color;
+  v.innerHTML = `<b class="title" style="color:${color}">${esc(title)}</b>${sub}`;
+
+  $("highlight").innerHTML = r.segments.map(([text, label, action]) => {
+    if (!label) return esc(text);
+    const c = cfg.colors[action];
+    return `<span class="ent" style="background:${c}33;outline:1px solid ${c}">${esc(text)}<small style="color:${c}">${esc(label)}</small></span>`;
+  }).join("") || '<span style="color:var(--muted)">(empty prompt)</span>';
+
+  $("safe").textContent = r.blocked ? "⛔ Blocked — nothing would be sent to the LLM." : r.safe_text;
+  $("entities").innerHTML = r.entities.length
+    ? r.entities.map((row) => `<tr>${row.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")
+    : '<tr><td colspan="5" style="color:var(--muted)">No entities detected.</td></tr>';
+  $("audit").textContent = r.audit.length ? JSON.stringify(r.audit, null, 2) : "// no audit events (nothing masked or blocked)";
+}
+
+function runPseudonymize() {
+  const r = call("pseudonymize_json", $("prompt").value, $("policy").value, selectedDetectors());
+  showError("pseudo-error", r.ok ? "" : r.error);
+  if (!r.ok) return;
+  $("pseudo-text").textContent = r.text;
+  $("tokens").innerHTML = r.tokens.length
+    ? r.tokens.map(([t, o]) => `<tr><td><code>${esc(t)}</code></td><td>${esc(o)}</td></tr>`).join("")
+    : '<tr><td colspan="2" style="color:var(--muted)">Vault is empty.</td></tr>';
+  $("reply").value = r.reply;
+  $("restored").textContent = "";
+  $("restore-btn").disabled = false;
+}
+
+function runRestore() {
+  const r = call("restore_json", $("reply").value);
+  showError("pseudo-error", r.ok ? "" : r.error);
+  if (r.ok) $("restored").textContent = r.text;
+}
+
+function wireUi() {
+  $("ver").textContent = "v" + cfg.version;
+  $("preset").innerHTML = Object.keys(cfg.presets).map((n) => `<option>${esc(n)}</option>`).join("");
+  $("detectors").innerHTML = cfg.detectors
+    .map((d) => `<label><input type="checkbox" value="${esc(d)}"> ${esc(d)}</label>`).join("");
+  $("examples").innerHTML = cfg.examples
+    .map(([t, p], i) => `<button data-i="${i}">${esc(t)}<small>${esc(p)}</small></button>`).join("");
+  $("snippet").textContent = cfg.snippet;
+
+  $("preset").addEventListener("change", (e) => { applyPreset(e.target.value); runScan(); });
+  $("scan-btn").addEventListener("click", runScan);
+  $("pseudo-btn").addEventListener("click", runPseudonymize);
+  $("restore-btn").addEventListener("click", runRestore);
+  $("prompt").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) runScan(); });
+  $("examples").addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    const [text, preset] = cfg.examples[+b.dataset.i];
+    $("prompt").value = text; applyPreset(preset); selectTab("scan"); runScan();
+  });
+  document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+
+  $("prompt").value = cfg.examples[0][0];
+  applyPreset("Default policy");
+}
+
+function selectTab(name) {
+  document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+  $("tab-scan").hidden = name !== "scan";
+  $("tab-pseudo").hidden = name !== "pseudo";
+}
+
+async function main() {
+  try {
+    const pyodide = await loadPyodide();
+    await pyodide.loadPackage(["micropip", "pyyaml"]);
+    await pyodide.pyimport("micropip").install(PROMPTVEIL_PIN);
+    const src = await (await fetch("core.py", { cache: "no-cache" })).text();
+    pyodide.FS.writeFile("/home/pyodide/core.py", src);
+    pyodide.runPython("import sys; sys.path.insert(0, '/home/pyodide')");
+    core = pyodide.pyimport("core");
+    cfg = JSON.parse(core.config_json());
+    wireUi();
+    ["scan-btn", "pseudo-btn"].forEach((id) => ($(id).disabled = false));
+    $("status").textContent = "✅ Ready — PromptVeil is running in your browser.";
+    $("status").className = "ready";
+    runScan();
+  } catch (err) {
+    console.error(err);
+    $("status").innerHTML = `<span class="error">Failed to start: ${esc(err.message || err)}</span>`;
+  }
+}
+main();
+</script>
+</body>
+</html>

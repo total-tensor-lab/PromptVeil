@@ -1,0 +1,4 @@
+# For running app.py locally. The Space (index.html) installs the same
+# promptveil pin in the browser — keep PROMPTVEIL_PIN there in sync.
+promptveil==0.2.0
+gradio>=6.0
